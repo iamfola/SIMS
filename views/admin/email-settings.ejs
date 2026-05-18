@@ -2,43 +2,98 @@
 
 <div class="row justify-content-center">
   <div class="col-md-8">
-    <div class="card">
-      <div class="card-header">SMTP Configuration</div>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+
+    <div class="card mb-3">
+      <div class="card-header">Email Provider</div>
       <div class="card-body">
-        <p class="text-muted mb-4">Configure the email server that will send result notifications to students.</p>
-        <% if (typeof error !== 'undefined' && error) { %>
-          <div class="alert alert-danger"><%= error %></div>
-        <% } %>
-        <% if (typeof success !== 'undefined' && success) { %>
-          <div class="alert alert-success"><%= success %></div>
-        <% } %>
-        <form method="POST" action="/admin/email-settings">
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="smtp_host" class="form-label">SMTP Host</label>
-              <input type="text" class="form-control" id="smtp_host" name="smtp_host" value="<%= smtp_host %>" placeholder="e.g. smtp.gmail.com" required>
-            </div>
-            <div class="col-md-3">
-              <label for="smtp_port" class="form-label">SMTP Port</label>
-              <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="<%= smtp_port %>" placeholder="587" required>
-            </div>
-            <div class="col-md-3">
-              <label for="from_name" class="form-label">Sender Name</label>
-              <input type="text" class="form-control" id="from_name" name="from_name" value="<%= from_name %>" placeholder="SIMS School">
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="smtp_user" class="form-label">SMTP Username (Sender Email)</label>
-            <input type="email" class="form-control" id="smtp_user" name="smtp_user" value="<%= smtp_user %>" placeholder="sims@yourschool.com" required>
-          </div>
+        <p class="text-muted mb-3">Choose how to send emails. SMTP works locally but many deployment hosts block SMTP ports. SendGrid's HTTP API (free tier: 100 emails/day) works everywhere.</p>
+        <form method="POST" action="/admin/email-settings" id="emailSettingsForm">
           <div class="mb-4">
-            <label for="smtp_pass" class="form-label">SMTP Password</label>
-            <input type="password" class="form-control" id="smtp_pass" name="smtp_pass" value="<%= smtp_pass %>" placeholder="App password or SMTP password">
-            <small class="text-muted">For Gmail, use an App Password. Enable 2FA and generate one at myaccount.google.com/apppasswords</small>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="email_provider" id="providerSmtp" value="smtp" <%= email_provider === 'smtp' ? 'checked' : '' %>>
+              <label class="form-check-label" for="providerSmtp">SMTP</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="email_provider" id="providerSendGrid" value="sendgrid" <%= email_provider === 'sendgrid' ? 'checked' : '' %>>
+              <label class="form-check-label" for="providerSendGrid">SendGrid (HTTP API)</label>
+            </div>
           </div>
+
+          <div id="smtpFields" class="<%= email_provider === 'sendgrid' ? 'd-none' : '' %>">
+            <h5 class="text-muted mb-3">SMTP Configuration</h5>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="smtp_host" class="form-label">SMTP Host</label>
+                <input type="text" class="form-control" id="smtp_host" name="smtp_host" value="<%= smtp_host %>" placeholder="e.g. smtp.gmail.com">
+              </div>
+              <div class="col-md-3">
+                <label for="smtp_port" class="form-label">SMTP Port</label>
+                <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="<%= smtp_port %>" placeholder="587">
+              </div>
+              <div class="col-md-3">
+                <label for="from_name" class="form-label">Sender Name</label>
+                <input type="text" class="form-control" id="from_name" name="from_name" value="<%= from_name %>" placeholder="SIMS School">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="smtp_user" class="form-label">SMTP Username (Sender Email)</label>
+              <input type="email" class="form-control" id="smtp_user" name="smtp_user" value="<%= smtp_user %>" placeholder="sims@yourschool.com">
+            </div>
+            <div class="mb-4">
+              <label for="smtp_pass" class="form-label">SMTP Password</label>
+              <input type="password" class="form-control" id="smtp_pass" name="smtp_pass" value="<%= smtp_pass %>" placeholder="App password or SMTP password">
+              <small class="text-muted">For Gmail, use an App Password. Enable 2FA and generate one at myaccount.google.com/apppasswords</small>
+            </div>
+          </div>
+
+          <div id="sendgridFields" class="<%= email_provider === 'smtp' ? 'd-none' : '' %>">
+            <h5 class="text-muted mb-3">SendGrid Configuration</h5>
+            <div class="mb-3">
+              <label for="sendgrid_api_key" class="form-label">SendGrid API Key</label>
+              <input type="password" class="form-control" id="sendgrid_api_key" name="sendgrid_api_key" value="<%= sendgrid_api_key %>" placeholder="SG.xxxxxxxxxxxxxxxxxxx">
+              <small class="text-muted">Create an API key at <a href="https://app.sendgrid.com/settings/api_keys" target="_blank">app.sendgrid.com/settings/api_keys</a> with "Mail Send" permission.</small>
+            </div>
+            <div class="mb-3">
+              <label for="sg_from_email" class="form-label">Sender Email (From address)</label>
+              <input type="email" class="form-control" id="smtp_user" name="smtp_user" value="<%= smtp_user %>" placeholder="noreply@yourschool.com">
+              <small class="text-muted">Must be a verified sender in your SendGrid account.</small>
+            </div>
+            <div class="mb-4">
+              <label for="sg_from_name" class="form-label">Sender Name</label>
+              <input type="text" class="form-control" name="from_name" value="<%= from_name %>" placeholder="SIMS School">
+            </div>
+          </div>
+
           <button type="submit" class="btn btn-primary w-100">Save Settings</button>
         </form>
       </div>
     </div>
+
+    <div class="card">
+      <div class="card-header">Quick SendGrid Setup</div>
+      <div class="card-body">
+        <ol class="mb-0">
+          <li>Sign up at <a href="https://signup.sendgrid.com" target="_blank">sendgrid.com</a> (free tier: 100 emails/day)</li>
+          <li>Go to <strong>Settings → API Keys</strong> and create a key with "Mail Send"</li>
+          <li>Go to <strong>Settings → Sender Authentication</strong> and verify your sender email</li>
+          <li>Paste the API key above and save</li>
+        </ol>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+document.querySelectorAll('input[name="email_provider"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.getElementById('smtpFields').classList.toggle('d-none', radio.value === 'sendgrid');
+    document.getElementById('sendgridFields').classList.toggle('d-none', radio.value === 'smtp');
+  });
+});
+</script>

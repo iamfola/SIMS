@@ -413,13 +413,15 @@ router.delete('/grading/:id', isAdmin, (req, res) => {
 });
 
 router.get('/email-settings', isAdmin, (req, res) => {
+  const email_provider = getEmailSetting('email_provider') || 'smtp';
   const smtp_host = getEmailSetting('smtp_host') || '';
   const smtp_port = getEmailSetting('smtp_port') || '587';
   const smtp_user = getEmailSetting('smtp_user') || '';
   const smtp_pass = getEmailSetting('smtp_pass') || '';
   const from_name = getEmailSetting('from_name') || 'SIMS School';
+  const sendgrid_api_key = getEmailSetting('sendgrid_api_key') || '';
   res.render('admin/email-settings', {
-    smtp_host, smtp_port, smtp_user, smtp_pass, from_name,
+    email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, from_name, sendgrid_api_key,
     success: req.query.success,
     error: req.query.error,
     title: 'Email Settings'
@@ -428,12 +430,14 @@ router.get('/email-settings', isAdmin, (req, res) => {
 
 router.post('/email-settings', isAdmin, (req, res) => {
   try {
-    const { smtp_host, smtp_port, smtp_user, smtp_pass, from_name } = req.body;
-    setEmailSetting('smtp_host', smtp_host);
-    setEmailSetting('smtp_port', smtp_port);
-    setEmailSetting('smtp_user', smtp_user);
-    setEmailSetting('smtp_pass', smtp_pass);
-    setEmailSetting('from_name', from_name);
+    const { email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, from_name, sendgrid_api_key } = req.body;
+    setEmailSetting('email_provider', email_provider === 'sendgrid' ? 'sendgrid' : 'smtp');
+    setEmailSetting('smtp_host', smtp_host || '');
+    setEmailSetting('smtp_port', smtp_port || '587');
+    setEmailSetting('smtp_user', smtp_user || '');
+    setEmailSetting('smtp_pass', smtp_pass || '');
+    setEmailSetting('from_name', from_name || 'SIMS School');
+    setEmailSetting('sendgrid_api_key', sendgrid_api_key || '');
     res.redirect('/admin/email-settings?success=Email settings saved');
   } catch (error) {
     console.error('Save email settings error:', error);

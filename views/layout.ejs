@@ -60,6 +60,7 @@
         <% } %>
       </div>
     </div>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <div id="page-content-wrapper">
       <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
         <div class="container-fluid">
@@ -129,11 +130,68 @@
   </script>
   <script>
     var toggle = document.getElementById('sidebarToggle');
-    if (toggle) {
-      toggle.addEventListener('click', function() {
+    var sidebar = document.getElementById('sidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+
+    function isMobile() {
+      return window.innerWidth < 768;
+    }
+
+    function openSidebar() {
+      if (isMobile()) {
+        sidebar.classList.add('open');
+        backdrop.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      } else {
         document.body.classList.toggle('sidebar-expanded');
+      }
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    if (toggle) {
+      toggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (isMobile()) {
+          if (sidebar.classList.contains('open')) {
+            closeSidebar();
+          } else {
+            openSidebar();
+          }
+        } else {
+          document.body.classList.toggle('sidebar-expanded');
+        }
       });
     }
+
+    if (backdrop) {
+      backdrop.addEventListener('click', closeSidebar);
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && sidebar && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
+    });
+
+    window.addEventListener('resize', function() {
+      if (!isMobile() && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
+    });
+
+    var sidebarLinks = document.querySelectorAll('.sidebar .list-group-item');
+    sidebarLinks.forEach(function(link) {
+      link.addEventListener('click', function() {
+        if (isMobile()) {
+          closeSidebar();
+        }
+      });
+    });
 
     var items = document.querySelectorAll('.sidebar-item');
     var currentPage = window.location.pathname;

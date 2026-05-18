@@ -1,127 +1,307 @@
-<h2 class="mb-4">My Results</h2>
+<div class="results-page">
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+    <div>
+      <h2 class="page-title mb-1">My Results</h2>
+      <p class="page-subtitle mb-0">View your approved academic results</p>
+    </div>
+  </div>
 
-<div class="card mb-4">
-  <div class="card-body">
-    <form method="GET" action="/student/results" class="row g-3">
-      <div class="col-md-4">
-        <label for="session_id" class="form-label">Session</label>
-        <select class="form-select" id="session_id" name="session_id">
-          <% allSessions.forEach(function(s) { %>
-            <option value="<%= s.id %>" <%= selectedSessionId == s.id ? 'selected' : '' %>><%= s.name %></option>
-          <% }) %>
-        </select>
-      </div>
-      <div class="col-md-4">
-        <label for="term_id" class="form-label">Term</label>
-        <select class="form-select" id="term_id" name="term_id">
-          <option value="">All Terms</option>
-          <% availableTerms.forEach(function(t) { %>
-            <option value="<%= t.id %>" <%= selectedTermId == t.id ? 'selected' : '' %>><%= t.name %></option>
-          <% }) %>
-        </select>
-      </div>
-      <div class="col-md-4 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary">View Results</button>
-      </div>
-    </form>
-  </div>
-</div>
+  <% if (pendingCount > 0) { %>
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+      <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+      <span>You have <strong><%= pendingCount %></strong> result(s) pending approval. Only approved results are shown below.</span>
+    </div>
+  <% } %>
 
-<% if (selectedSession && selectedTerm) { %>
-  <div class="alert alert-info mb-3">
-    <i class="bi bi-calendar3"></i> Showing results for: <strong><%= selectedSession.name %></strong> | <strong><%= selectedTerm.name %></strong>
-  </div>
-<% } else if (selectedSession) { %>
-  <div class="alert alert-info mb-3">
-    <i class="bi bi-calendar3"></i> Showing results for: <strong><%= selectedSession.name %></strong> | All Terms
-  </div>
-<% } %>
-
-<% if (pendingCount > 0) { %>
-  <div class="alert alert-warning">
-    <i class="bi bi-exclamation-triangle"></i>
-    You have <strong><%= pendingCount %></strong> result(s) pending approval. Only approved results are shown.
-  </div>
-<% } %>
-<div class="card">
-  <div class="card-body">
-    <% if (results.length > 0) { %>
-      <div class="d-flex justify-content-end mb-3">
-        <button class="btn btn-primary" onclick="requestResult()" id="requestBtn"><i class="bi bi-envelope"></i> Request Result via Email</button>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Subject</th>
-              <th>CA (30)</th>
-              <th>Exam (70)</th>
-              <th>Total</th>
-              <th>Grade</th>
-              <th>Term</th>
-              <th>Session</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% results.forEach(function(r) { %>
-              <tr>
-                <td><strong><%= r.subject_name %></strong></td>
-                <td><%= r.ca_score %></td>
-                <td><%= r.exam_score %></td>
-                <td><strong><%= r.total %></strong></td>
-                <td><span class="badge bg-primary"><%= r.grade %></span></td>
-                <td><%= r.term %></td>
-                <td><%= r.session %></td>
-              </tr>
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" action="/student/results" class="row g-3">
+        <div class="col-md-4">
+          <label for="session_id" class="form-label">Academic Session</label>
+          <select class="form-select" id="session_id" name="session_id" onchange="this.form.submit()">
+            <option value="">All Sessions</option>
+            <% allSessions.forEach(function(s) { %>
+              <option value="<%= s.id %>" <%= selectedSessionId == s.id ? 'selected' : '' %>><%= s.name %></option>
             <% }) %>
-          </tbody>
-        </table>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="term_id" class="form-label">Term</label>
+          <select class="form-select" id="term_id" name="term_id" onchange="this.form.submit()">
+            <option value="">All Terms</option>
+            <% availableTerms.forEach(function(t) { %>
+              <option value="<%= t.id %>" <%= selectedTermId == t.id ? 'selected' : '' %>><%= t.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-filter-left"></i> Filter</button>
+          <% if (results.length > 0) { %>
+            <button type="button" class="btn btn-outline-primary" onclick="requestResult()" id="requestBtn" title="Request result PDF via email">
+              <i class="bi bi-envelope"></i>
+            </button>
+          <% } %>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <% if (selectedSession && selectedTerm) { %>
+    <div class="alert alert-info d-flex align-items-center gap-2 mb-4">
+      <i class="bi bi-calendar3 flex-shrink-0"></i>
+      <span>Showing: <strong><%= selectedSession.name %></strong> | <strong><%= selectedTerm.name %></strong></span>
+    </div>
+  <% } else if (selectedSession) { %>
+    <div class="alert alert-info d-flex align-items-center gap-2 mb-4">
+      <i class="bi bi-calendar3 flex-shrink-0"></i>
+      <span>Showing: <strong><%= selectedSession.name %></strong> | All Terms</span>
+    </div>
+  <% } %>
+
+  <% if (results.length > 0) { %>
+    <%
+      var totalScore = 0;
+      var totalSubjects = results.length;
+      results.forEach(function(r) { totalScore += r.total; });
+      var avgScore = (totalScore / totalSubjects).toFixed(1);
+      var gpa = results.reduce(function(sum, r) {
+        var gp = r.grade === 'A' ? 5 : r.grade === 'B' ? 4 : r.grade === 'C' ? 3 : r.grade === 'D' ? 2 : r.grade === 'E' ? 1 : 0;
+        return sum + gp;
+      }, 0) / totalSubjects;
+    %>
+
+    <div class="row g-3 mb-4">
+      <div class="col-4">
+        <div class="stat-card bg-primary text-center" style="padding: 16px 8px;">
+          <div class="stat-number" style="font-size: 1.5rem;"><%= totalSubjects %></div>
+          <div class="stat-label" style="font-size: 0.65rem;">Subjects</div>
+        </div>
       </div>
-    <% } else { %>
-      <div class="text-center py-5">
-        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-        <h5 class="mt-3 text-muted">No approved results available</h5>
-        <p class="text-muted">Your results will appear here once your teacher uploads them and the admin approves.</p>
+      <div class="col-4">
+        <div class="stat-card bg-success text-center" style="padding: 16px 8px;">
+          <div class="stat-number" style="font-size: 1.5rem;"><%= avgScore %>%</div>
+          <div class="stat-label" style="font-size: 0.65rem;">Average</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="stat-card bg-purple text-center" style="padding: 16px 8px;">
+          <div class="stat-number" style="font-size: 1.5rem;"><%= gpa.toFixed(1) %></div>
+          <div class="stat-label" style="font-size: 0.65rem;">GPA</div>
+        </div>
+      </div>
+    </div>
+
+    <%
+      var currentGroup = '';
+      var groupedResults = {};
+      results.forEach(function(r) {
+        var key = (r.session || 'N/A') + '|' + (r.term || 'N/A');
+        if (!groupedResults[key]) groupedResults[key] = [];
+        groupedResults[key].push(r);
+      });
+    %>
+
+    <% for (var groupKey in groupedResults) {
+      var group = groupKey.split('|');
+      var sessionName = group[0];
+      var termName = group[1];
+      var groupResults = groupedResults[groupKey];
+      var groupTotal = 0;
+      groupResults.forEach(function(r) { groupTotal += r.total; });
+      var groupAvg = (groupTotal / groupResults.length).toFixed(1);
+    %>
+      <div class="card mb-4">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <span><i class="bi bi-calendar-range"></i> <%= termName %>, <%= sessionName %></span>
+          <span class="badge bg-info" style="font-size: 0.75rem;">Avg: <%= groupAvg %>%</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="results-list">
+            <% groupResults.forEach(function(r, idx) {
+              var gradeColor = r.grade === 'A' ? '#10b981' : r.grade === 'B' ? '#3b82f6' : r.grade === 'C' ? '#f59e0b' : r.grade === 'D' ? '#f97316' : r.grade === 'E' ? '#ef4444' : '#dc2626';
+              var maxScore = 100;
+              var barWidth = Math.min(100, (r.total / maxScore) * 100);
+              var isLast = idx === groupResults.length - 1;
+            %>
+              <div class="result-row <%= isLast ? '' : 'border-bottom' %>">
+                <div class="result-row-inner">
+                  <div class="result-subject">
+                    <div class="result-subject-name"><%= r.subject_name %></div>
+                    <div class="result-scores d-flex gap-3">
+                      <span class="text-muted" style="font-size: 0.75rem;">CA: <%= r.ca_score %></span>
+                      <span class="text-muted" style="font-size: 0.75rem;">Exam: <%= r.exam_score %></span>
+                    </div>
+                  </div>
+                  <div class="result-grade-container">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="result-total"><%= r.total %></span>
+                      <span class="badge result-grade-badge" style="background: <%= gradeColor %>;"><%= r.grade %></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="result-bar-track">
+                  <div class="result-bar-fill" style="width: <%= barWidth %>%; background: <%= gradeColor %>;"></div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
       </div>
     <% } %>
-  </div>
+
+    <div class="text-center mb-4">
+      <button class="btn btn-primary btn-lg w-100 w-md-auto" onclick="requestResult()" id="requestBtn2">
+        <i class="bi bi-envelope-paper"></i> Request Full Results via Email
+      </button>
+      <p class="text-muted mt-2 mb-0" style="font-size: 0.8rem;">A PDF report card with all subjects, grades, and class rank will be sent to your email.</p>
+    </div>
+
+  <% } else { %>
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center py-5">
+          <div class="mb-3" style="font-size: 3.5rem; color: var(--text-muted);">
+            <i class="bi bi-journal-text"></i>
+          </div>
+          <h5 class="text-muted mb-2">No Results Available</h5>
+          <p class="text-muted mb-4" style="max-width: 400px; margin: 0 auto;">
+            <% if (selectedTerm) { %>
+              No approved results for <strong><%= selectedSession ? selectedSession.name : '' %></strong> - <strong><%= selectedTerm.name %></strong>.
+            <% } else { %>
+              Your approved results will appear here once your teacher uploads them and the admin approves.
+            <% } %>
+          </p>
+          <% if (selectedTerm || selectedSession) { %>
+            <a href="/student/results" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i> Clear Filters</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% } %>
 </div>
 
 <script>
 async function requestResult() {
-  const btn = document.getElementById('requestBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+  var sessionEl = document.getElementById('session_id');
+  var termEl = document.getElementById('term_id');
+  var session_id = sessionEl.value;
+  var term_id = termEl.value;
 
-  const session_id = document.getElementById('session_id').value;
-  let term_id = document.getElementById('term_id').value;
+  if (!session_id) {
+    showAlert('Please select a session first.');
+    return;
+  }
   if (!term_id) {
-    const sel = document.getElementById('term_id');
-    for (let i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].value) { term_id = sel.options[i].value; break; }
+    for (var i = 0; i < termEl.options.length; i++) {
+      if (termEl.options[i].value) { term_id = termEl.options[i].value; break; }
     }
   }
   if (!term_id) {
     showAlert('No term available. Please contact the admin.');
-    btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-envelope"></i> Request Result via Email';
     return;
   }
 
-  const res = await fetch('/student/request-result', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id, term_id })
+  var buttons = document.querySelectorAll('[id^="requestBtn"]');
+  buttons.forEach(function(b) {
+    b.disabled = true;
+    b.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
   });
 
-  const data = await res.json();
-  btn.disabled = false;
-  btn.innerHTML = '<i class="bi bi-envelope"></i> Request Result via Email';
+  var res = await fetch('/student/request-result', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: parseInt(session_id), term_id: parseInt(term_id) })
+  });
+
+  var data = await res.json();
+
+  buttons.forEach(function(b) {
+    b.disabled = false;
+    b.innerHTML = '<i class="bi bi-envelope-paper"></i> Request Full Results via Email';
+  });
 
   if (data.success) {
     showAlert('Result has been sent to your email.');
   } else {
-    showAlert(data.message || 'Failed to send result. Make sure you have set up your email in your profile.');
+    showAlert(data.message || 'Failed to send. Make sure you have set up your email in your profile.');
   }
 }
 </script>
+
+<style>
+.results-page .result-row {
+  padding: 16px 20px;
+  transition: background 0.2s ease;
+}
+.results-page .result-row:hover {
+  background: rgba(59, 130, 246, 0.03);
+}
+.results-page .result-row-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.results-page .result-subject {
+  flex: 1;
+  min-width: 0;
+}
+.results-page .result-subject-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.results-page .result-total {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+.results-page .result-grade-badge {
+  font-size: 0.85rem;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: center;
+}
+.results-page .result-bar-track {
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.results-page .result-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+.results-page .stat-card.bg-purple {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+@media (max-width: 575.98px) {
+  .results-page .result-row {
+    padding: 14px 14px;
+  }
+  .results-page .result-subject-name {
+    font-size: 0.85rem;
+  }
+  .results-page .result-total {
+    font-size: 1rem;
+  }
+  .results-page .result-grade-badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    min-width: 30px;
+  }
+  .results-page .result-scores {
+    gap: 8px !important;
+  }
+  .results-page .result-scores span {
+    font-size: 0.7rem !important;
+  }
+}
+</style>
