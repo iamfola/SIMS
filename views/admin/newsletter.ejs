@@ -1,0 +1,143 @@
+<h2 class="mb-4">Send Newsletter</h2>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<div class="card">
+  <div class="card-header"><i class="bi bi-megaphone"></i> Compose Newsletter</div>
+  <div class="card-body">
+    <form method="POST" action="/admin/newsletter" onsubmit="return confirmSend()">
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Send to</label>
+        <div class="btn-group w-100" role="group">
+          <input type="radio" class="btn-check" name="recipient_type" id="rec-all" value="all" checked onchange="toggleRecipients()">
+          <label class="btn btn-outline-primary" for="rec-all"><i class="bi bi-people"></i> All Students (<%= studentCount %>)</label>
+          <input type="radio" class="btn-check" name="recipient_type" id="rec-class" value="class" onchange="toggleRecipients()">
+          <label class="btn btn-outline-primary" for="rec-class"><i class="bi bi-book"></i> By Class</label>
+          <input type="radio" class="btn-check" name="recipient_type" id="rec-selected" value="selected" onchange="toggleRecipients()">
+          <label class="btn btn-outline-primary" for="rec-selected"><i class="bi bi-person-check"></i> Pick Students</label>
+        </div>
+
+        <div id="class-picker" class="mt-2 d-none">
+          <select class="form-select" name="class_id">
+            <option value="">-- Select Class --</option>
+            <% classes.forEach(function(c) { %>
+              <option value="<%= c.id %>"><%= c.name %><%= c.arm ? ' - ' + c.arm : '' %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div id="student-picker" class="mt-2 d-none">
+          <input type="text" class="form-control mb-2" id="studentSearch" placeholder="Search students..." oninput="filterStudents()">
+          <div style="max-height:150px;overflow-y:auto;border:1px solid var(--border-color);border-radius:6px;padding:4px">
+            <% students.forEach(function(s) { %>
+              <label class="d-flex align-items-center gap-2 px-2 py-1 student-opt" data-name="<%= s.first_name %> <%= s.last_name %> <%= s.reg_no %>">
+                <input type="checkbox" name="student_ids" value="<%= s.id %>" class="form-check-input m-0">
+                <span><%= s.first_name %> <%= s.last_name %> <span class="text-muted">(<%= s.reg_no %>)</span></span>
+                <span class="badge bg-light text-dark ms-auto"><%= s.class_name %><%= s.class_arm ? ' ' + s.class_arm : '' %></span>
+              </label>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="subject" class="form-label fw-semibold">Subject</label>
+        <input type="text" class="form-control" id="subject" name="subject" placeholder="Enter email subject" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Message</label>
+        <div class="d-flex gap-1 mb-2 flex-wrap p-1 border rounded" style="background:var(--bg)">
+          <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="execCmd('bold')" title="Bold"><i class="bi bi-type-bold"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="execCmd('italic')" title="Italic"><i class="bi bi-type-italic"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="execCmd('underline')" title="Underline"><i class="bi bi-type-underline"></i></button>
+          <div class="vr align-self-center"></div>
+          <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="execCmd('formatBlock','h3')" title="Heading"><i class="bi bi-heading"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="execCmd('formatBlock','p')" title="Paragraph"><i class="bi bi-paragraph"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="execCmd('insertUnorderedList')" title="List"><i class="bi bi-list-ul"></i></button>
+          <div class="vr align-self-center"></div>
+          <button type="button" class="btn btn-sm btn-outline-secondary border-0" onclick="execCmd('insertHorizontalRule')" title="Divider"><i class="bi bi-dash-lg"></i></button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="insertNameTag()"><i class="bi bi-person"></i> {name}</button>
+        </div>
+        <div class="border rounded" style="overflow:hidden">
+          <div style="min-height:260px;padding:14px;outline:none;cursor:text;background:var(--bg-card);color:var(--text-primary)" id="editor" contenteditable="true"></div>
+        </div>
+        <textarea name="body" id="body" class="d-none"></textarea>
+        <div class="form-text mt-1">Click <strong>{name}</strong> to insert each student's name automatically.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label text-muted">Preview</label>
+        <div class="border rounded p-3" style="background:var(--bg-card);min-height:100px;color:var(--text-primary);border-color:var(--border-color) !important" id="preview"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-send"></i> Send Newsletter</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const editor = document.getElementById('editor');
+  const preview = document.getElementById('preview');
+  const body = document.getElementById('body');
+
+  function execCmd(cmd, val) {
+    editor.focus();
+    document.execCommand(cmd, false, val || null);
+    updatePreview();
+  }
+
+  function insertNameTag() {
+    editor.focus();
+    document.execCommand('insertText', false, '{name}');
+    updatePreview();
+  }
+
+  function updatePreview() {
+    preview.innerHTML = editor.innerHTML;
+  }
+
+  editor.addEventListener('input', updatePreview);
+  editor.addEventListener('keyup', updatePreview);
+  editor.addEventListener('paste', () => setTimeout(updatePreview, 100));
+
+  function toggleRecipients() {
+    const val = document.querySelector('input[name="recipient_type"]:checked').value;
+    document.getElementById('class-picker').classList.toggle('d-none', val !== 'class');
+    document.getElementById('student-picker').classList.toggle('d-none', val !== 'selected');
+  }
+
+  function filterStudents() {
+    const q = document.getElementById('studentSearch').value.toLowerCase();
+    document.querySelectorAll('.student-opt').forEach(el => {
+      el.style.display = el.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  function confirmSend() {
+    const html = editor.innerHTML.trim();
+    if (!html || html === '<br>') {
+      alert('Please write a message body.');
+      return false;
+    }
+    body.value = html;
+
+    const type = document.querySelector('input[name="recipient_type"]:checked').value;
+    if (type === 'class') {
+      const sel = document.querySelector('select[name="class_id"]');
+      if (!sel.value) { alert('Select a class.'); return false; }
+      return confirm(`Send newsletter to ${sel.options[sel.selectedIndex].text}?`);
+    }
+    if (type === 'selected') {
+      const checked = document.querySelectorAll('input[name="student_ids"]:checked');
+      if (checked.length === 0) { alert('Select at least one student.'); return false; }
+      return confirm(`Send newsletter to ${checked.length} selected student(s)?`);
+    }
+    return confirm('Send newsletter to all students?');
+  }
+</script>

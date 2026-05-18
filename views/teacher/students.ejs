@@ -1,0 +1,66 @@
+<h2 class="mb-4">My Students</h2>
+
+<% if (teacher && teacher.class_id) { %>
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Showing students in: <strong><%= teacher.class_name %><%= teacher.class_arm ? ' ' + teacher.class_arm : '' %></strong>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Student List</div>
+    <div class="card-body">
+      <div class="input-group mb-3">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" id="studentSearch" placeholder="Search by name, reg no, or username...">
+        <button class="btn btn-outline-secondary" type="button" id="clearSearch"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Reg No</th>
+              <th>Full Name</th>
+              <th>Age</th>
+              <th>Username</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% students.forEach(function(s) { %>
+              <tr>
+                <td><strong><%= s.reg_no %></strong></td>
+                <td><%= s.first_name %> <%= s.middle_name ? s.middle_name + ' ' : '' %><%= s.last_name %></td>
+                <td><%= s.age %></td>
+                <td><%= s.username %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% if (students.length === 0) { %>
+        <p class="text-muted">No students found in this class.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  const searchInput = document.getElementById('studentSearch');
+  const clearBtn = document.getElementById('clearSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase().trim();
+      document.querySelectorAll('table tbody tr').forEach(row => {
+        row.style.display = q === '' || row.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      if (searchInput) { searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); searchInput.focus(); }
+    });
+  }
+</script>
+<% } else { %>
+  <div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i> You are not assigned to any class. Please contact the admin.
+  </div>
+<% } %>

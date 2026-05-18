@@ -1,0 +1,209 @@
+<h2 class="mb-4">Manage Teachers</h2>
+<div class="row">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Create Teacher Account</div>
+      <div class="card-body">
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <form method="POST" action="/admin/teachers">
+          <div class="mb-3">
+            <label for="first_name" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="middle_name" class="form-label">Middle Name (Optional)</label>
+            <input type="text" class="form-control" id="middle_name" name="middle_name">
+          </div>
+          <div class="mb-3">
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" minlength="6" required>
+            <small class="text-muted">Minimum 6 characters. Teacher must change on first login.</small>
+          </div>
+          <div class="mb-3">
+            <label for="class_id" class="form-label">Assign to Class (Optional)</label>
+            <select class="form-control" id="class_id" name="class_id">
+              <option value="">No Class Assigned</option>
+              <% classes.forEach(function(c) {
+                let div = '';
+                if (['JSS1','JSS2','JSS3'].includes(c.name)) div = 'Junior';
+                else if (c.arm === 'A') div = 'Science';
+                else if (c.arm === 'B') div = 'Art';
+                else if (c.arm === 'C') div = 'Commercial';
+              %>
+                <option value="<%= c.id %>"><%= c.name %><%= c.arm ? ' ' + c.arm : '' %><%= div ? ' (' + div + ')' : '' %></option>
+              <% }) %>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Create Teacher</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">All Teachers</div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Assigned Class</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% teachers.forEach(function(t) { %>
+              <tr>
+                <td><%= t.first_name %> <%= t.middle_name ? t.middle_name + ' ' : '' %><%= t.last_name %></td>
+                <td><%= t.username %></td>
+                <td>
+                  <% if (t.class_name) { %>
+                    <% let tDiv = ''; if (['JSS1','JSS2','JSS3'].includes(t.class_name)) tDiv = 'Junior'; else if (t.class_arm === 'A') tDiv = 'Science'; else if (t.class_arm === 'B') tDiv = 'Art'; else if (t.class_arm === 'C') tDiv = 'Commercial'; %>
+                    <%= t.class_name %><%= t.class_arm ? ' ' + t.class_arm : '' %><% if (tDiv) { %><br><small class="text-muted"><%= tDiv %></small><% } %>
+                  <% } else { %>
+                    <span class="text-muted">No class assigned</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (t.is_locked) { %>
+                    <span class="badge bg-danger">Locked</span>
+                  <% } else if (t.must_change_password) { %>
+                    <span class="badge bg-warning">Needs Password Change</span>
+                  <% } else { %>
+                    <span class="badge bg-success">Active</span>
+                  <% } %>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-warning edit-teacher" data-id="<%= t.id %>" data-first="<%= t.first_name %>" data-middle="<%= t.middle_name || '' %>" data-last="<%= t.last_name %>" data-class="<%= t.class_id || '' %>">Edit</button>
+                  <button class="btn btn-sm btn-info reset-password-teacher" data-id="<%= t.id %>" data-name="<%= t.first_name %> <%= t.last_name %>">Reset Password</button>
+                  <button class="btn btn-sm btn-danger delete-teacher" data-id="<%= t.id %>">Delete</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (teachers.length === 0) { %>
+          <p class="text-muted">No teachers found.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editTeacherModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Teacher</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editTeacherForm">
+          <input type="hidden" id="edit_teacher_id">
+          <div class="mb-3">
+            <label for="edit_first_name" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="edit_first_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_middle_name" class="form-label">Middle Name (Optional)</label>
+            <input type="text" class="form-control" id="edit_middle_name">
+          </div>
+          <div class="mb-3">
+            <label for="edit_last_name" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="edit_last_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_class_id" class="form-label">Assign to Class (Optional)</label>
+            <select class="form-select" id="edit_class_id">
+              <option value="">No Class Assigned</option>
+              <% classes.forEach(function(c) {
+                let div = '';
+                if (['JSS1','JSS2','JSS3'].includes(c.name)) div = 'Junior';
+                else if (c.arm === 'A') div = 'Science';
+                else if (c.arm === 'B') div = 'Art';
+                else if (c.arm === 'C') div = 'Commercial';
+              %>
+                <option value="<%= c.id %>"><%= c.name %><%= c.arm ? ' ' + c.arm : '' %><%= div ? ' (' + div + ')' : '' %></option>
+              <% }) %>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveTeacherBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.edit-teacher').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.getElementById('edit_teacher_id').value = this.dataset.id;
+      document.getElementById('edit_first_name').value = this.dataset.first;
+      document.getElementById('edit_middle_name').value = this.dataset.middle;
+      document.getElementById('edit_last_name').value = this.dataset.last;
+      document.getElementById('edit_class_id').value = this.dataset.class;
+      new bootstrap.Modal(document.getElementById('editTeacherModal')).show();
+    });
+  });
+
+  document.getElementById('saveTeacherBtn').addEventListener('click', async function() {
+    const id = document.getElementById('edit_teacher_id').value;
+    const first_name = document.getElementById('edit_first_name').value;
+    const middle_name = document.getElementById('edit_middle_name').value;
+    const last_name = document.getElementById('edit_last_name').value;
+    const class_id = document.getElementById('edit_class_id').value;
+
+    const res = await fetch('/admin/teachers/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ first_name, middle_name, last_name, class_id: class_id || null })
+    });
+
+    if (res.ok) {
+      location.reload();
+    } else {
+      const data = await res.json();
+      showAlert(data.error || 'Failed to update teacher');
+    }
+  });
+
+  document.querySelectorAll('.delete-teacher').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Delete this teacher?')) {
+        const res = await fetch('/admin/teachers/' + this.dataset.id, { method: 'DELETE' });
+        if (res.ok) location.reload();
+      }
+    });
+  });
+
+  document.querySelectorAll('.reset-password-teacher').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const name = this.dataset.name;
+      if (await showConfirm(`Reset password for ${name} to 12345678? They will need to change it on next login.`)) {
+        const res = await fetch('/admin/teachers/' + this.dataset.id + '/reset-password', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(data.message);
+          location.reload();
+        } else {
+          showAlert(data.error || 'Failed to reset password');
+        }
+      }
+    });
+  });
+</script>

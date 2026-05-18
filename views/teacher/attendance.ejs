@@ -1,0 +1,133 @@
+<h2 class="mb-4">Mark Attendance</h2>
+
+<% if (typeof currentSession !== 'undefined' && currentSession && typeof currentTerm !== 'undefined' && currentTerm) { %>
+  <div class="alert alert-info mb-3">
+    <i class="bi bi-calendar3"></i> Current: <strong><%= currentSession.name %></strong> | <strong><%= currentTerm.name %></strong>
+  </div>
+<% } %>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Mark Attendance for <%= teacher.class_name %><%= teacher.class_arm ? ' ' + teacher.class_arm : '' %></span>
+    <span class="badge bg-primary"><i class="bi bi-calendar-event"></i> <%= new Date(today + 'T00:00:00').toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+  </div>
+  <div class="card-body">
+
+    <% if (typeof markedCount !== 'undefined' && markedCount > 0) { %>
+      <div class="row mb-3">
+        <div class="col-4 text-center">
+          <div class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-circle-fill"></i> Present: <%= presentCount %></div>
+        </div>
+        <div class="col-4 text-center">
+          <div class="badge bg-warning fs-6 px-3 py-2"><i class="bi bi-clock-fill"></i> Late: <%= lateCount %></div>
+        </div>
+        <div class="col-4 text-center">
+          <div class="badge bg-danger fs-6 px-3 py-2"><i class="bi bi-x-circle-fill"></i> Absent: <%= absentCount %></div>
+        </div>
+      </div>
+    <% } %>
+
+    <form method="POST" action="/teacher/attendance" id="attendanceForm">
+      <input type="hidden" name="class_id" value="<%= teacher.class_id %>">
+      <input type="hidden" name="date" value="<%= today %>">
+      <input type="hidden" name="attendance" id="attendanceData">
+
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Reg No</th>
+              <th>Student Name</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% students.forEach(function(s, i) { %>
+              <% const status = typeof todayAttendance !== 'undefined' ? todayAttendance[s.id] : null; %>
+              <tr id="row_<%= s.id %>">
+                <td><%= i + 1 %></td>
+                <td><strong><%= s.reg_no %></strong></td>
+                <td>
+                  <span class="attendance-icon" id="icon_<%= s.id %>">
+                    <% if (status === 'present') { %>
+                      <i class="bi bi-check-circle-fill text-success" style="font-size:1.2rem;"></i>
+                    <% } else if (status === 'late') { %>
+                      <i class="bi bi-check-circle-fill text-warning" style="font-size:1.2rem;"></i>
+                    <% } else if (status === 'absent') { %>
+                      <i class="bi bi-x-circle-fill text-danger" style="font-size:1.2rem;"></i>
+                    <% } else { %>
+                      <i class="bi bi-circle text-muted" style="font-size:1.2rem;"></i>
+                    <% } %>
+                  </span>
+                  <%= s.first_name %> <%= s.middle_name || '' %> <%= s.last_name %>
+                </td>
+                <td>
+                  <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="status_<%= s.id %>" id="present_<%= s.id %>" value="present" <% if (status === 'present') { %>checked<% } %>>
+                    <label class="btn btn-outline-success btn-sm" for="present_<%= s.id %>">Present</label>
+
+                    <input type="radio" class="btn-check" name="status_<%= s.id %>" id="absent_<%= s.id %>" value="absent" <% if (status === 'absent') { %>checked<% } %>>
+                    <label class="btn btn-outline-danger btn-sm" for="absent_<%= s.id %>">Absent</label>
+
+                    <input type="radio" class="btn-check" name="status_<%= s.id %>" id="late_<%= s.id %>" value="late" <% if (status === 'late') { %>checked<% } %>>
+                    <label class="btn btn-outline-warning btn-sm" for="late_<%= s.id %>">Late</label>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (students.length === 0) { %>
+        <p class="text-muted">No students found in this class.</p>
+      <% } else { %>
+        <button type="submit" class="btn btn-success">Save Attendance</button>
+      <% } %>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const attendance = [];
+  const studentIds = JSON.parse('<%- JSON.stringify(students.map(s => s.id)) %>');
+
+  studentIds.forEach(function(studentId) {
+    const selected = document.querySelector('input[name="status_' + studentId + '"]:checked');
+    if (selected) {
+      attendance.push({ student_id: studentId, status: selected.value });
+    }
+  });
+
+  document.getElementById('attendanceData').value = JSON.stringify(attendance);
+  this.submit();
+});
+
+document.querySelectorAll('.btn-check').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    const parts = this.id.split('_');
+    const studentId = parts.slice(1).join('_');
+    const icon = document.getElementById('icon_' + studentId);
+    if (!icon) return;
+
+    icon.innerHTML = '';
+    if (this.value === 'present') {
+      icon.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size:1.2rem;"></i>';
+    } else if (this.value === 'late') {
+      icon.innerHTML = '<i class="bi bi-check-circle-fill text-warning" style="font-size:1.2rem;"></i>';
+    } else if (this.value === 'absent') {
+      icon.innerHTML = '<i class="bi bi-x-circle-fill text-danger" style="font-size:1.2rem;"></i>';
+    }
+  });
+});
+</script>

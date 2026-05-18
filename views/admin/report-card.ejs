@@ -1,0 +1,98 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Report Card</h2>
+  <div>
+    <a href="/admin/results" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Print</button>
+  </div>
+</div>
+
+<div id="report-card" class="card">
+  <div class="card-body p-5">
+    <div class="text-center mb-4">
+      <h3><%= school.school_name %></h3>
+      <h5>Student Report Card</h5>
+      <p class="mb-0"><strong><%= session.name %></strong> | <strong><%= term.name %></strong></p>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <table class="table table-bordered table-sm">
+          <tr><td><strong>Student Name:</strong></td><td><%= student.first_name %> <%= student.middle_name ? student.middle_name + ' ' : '' %><%= student.last_name %></td></tr>
+          <tr><td><strong>Reg No:</strong></td><td><%= student.reg_no %></td></tr>
+          <tr><td><strong>Class:</strong></td><td><%= student.class_name %><%= student.class_arm ? ' - ' + student.class_arm : '' %></td></tr>
+          <tr><td><strong>Age:</strong></td><td><%= student.age %></td></tr>
+        </table>
+      </div>
+      <div class="col-md-6">
+        <table class="table table-bordered table-sm">
+          <tr><td><strong>Average Score:</strong></td><td><%= avgScore %></td></tr>
+          <tr><td><strong>Class Position:</strong></td><td><%= classPosition %> out of <%= totalStudents %></td></tr>
+          <tr><td><strong>Attendance Rate:</strong></td><td><%= attendanceRate %>%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h5 class="mb-3">Academic Results</h5>
+    <table class="table table-bordered table-striped mb-4">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>CA (30)</th>
+          <th>Exam (70)</th>
+          <th>Total</th>
+          <th>Grade</th>
+          <th>Remark</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% results.forEach(function(r, i) { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><strong><%= r.subject_name %></strong></td>
+            <td><%= r.ca_score %></td>
+            <td><%= r.exam_score %></td>
+            <td><strong><%= r.total %></strong></td>
+            <td><%= r.grade %></td>
+            <td>
+              <% grades.forEach(function(g) { %>
+                <% if (g.grade === r.grade) { %>
+                  <%= g.remark %>
+                <% } %>
+              <% }) %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+      <tfoot>
+        <tr class="table-secondary">
+          <td colspan="4"><strong>Average</strong></td>
+          <td><strong><%= avgScore %></strong></td>
+          <td><%= grades.find(g => parseInt(avgScore) >= g.min_score && parseInt(avgScore) <= g.max_score)?.grade || 'F' %></td>
+          <td><%= (grades.find(g => parseInt(avgScore) >= g.min_score && parseInt(avgScore) <= g.max_score) || {}).remark || 'Fail' %></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="row mt-5">
+      <div class="col-md-6">
+        <p><strong>Class Teacher's Remark:</strong></p>
+        <p class="border-bottom pb-4">&nbsp;</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Principal's Remark:</strong></p>
+        <p class="border-bottom pb-4">&nbsp;</p>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <p><strong>Date:</strong> _________________</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Signature/Stamp:</strong> _________________</p>
+      </div>
+    </div>
+  </div>
+</div>
+

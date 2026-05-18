@@ -1,0 +1,44 @@
+<h2 class="mb-4">Email Settings</h2>
+
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">SMTP Configuration</div>
+      <div class="card-body">
+        <p class="text-muted mb-4">Configure the email server that will send result notifications to students.</p>
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <% if (typeof success !== 'undefined' && success) { %>
+          <div class="alert alert-success"><%= success %></div>
+        <% } %>
+        <form method="POST" action="/admin/email-settings">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="smtp_host" class="form-label">SMTP Host</label>
+              <input type="text" class="form-control" id="smtp_host" name="smtp_host" value="<%= smtp_host %>" placeholder="e.g. smtp.gmail.com" required>
+            </div>
+            <div class="col-md-3">
+              <label for="smtp_port" class="form-label">SMTP Port</label>
+              <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="<%= smtp_port %>" placeholder="587" required>
+            </div>
+            <div class="col-md-3">
+              <label for="from_name" class="form-label">Sender Name</label>
+              <input type="text" class="form-control" id="from_name" name="from_name" value="<%= from_name %>" placeholder="SIMS School">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="smtp_user" class="form-label">SMTP Username (Sender Email)</label>
+            <input type="email" class="form-control" id="smtp_user" name="smtp_user" value="<%= smtp_user %>" placeholder="sims@yourschool.com" required>
+          </div>
+          <div class="mb-4">
+            <label for="smtp_pass" class="form-label">SMTP Password</label>
+            <input type="password" class="form-control" id="smtp_pass" name="smtp_pass" value="<%= smtp_pass %>" placeholder="App password or SMTP password">
+            <small class="text-muted">For Gmail, use an App Password. Enable 2FA and generate one at myaccount.google.com/apppasswords</small>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Save Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+<div class="welcome-header">
+  <div>
+    <h2>Verify Result</h2>
+    <p class="page-subtitle">Verify the authenticity of a student result using its verification code</p>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="POST" action="/admin/verify">
+      <div class="input-group">
+        <input type="text" class="form-control" name="code" placeholder="e.g. <%= school.school_short_name %>-2026-1234" value="<%= code %>" required>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Verify</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><i class="bi bi-x-circle"></i> <%= error %></div>
+<% } %>
+
+<% if (result) { %>
+  <% if (result.tampered) { %>
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> This result has been <strong>modified</strong> since the verification code was issued. The code is no longer valid.</div>
+  <% } else { %>
+    <div class="alert alert-success"><i class="bi bi-check-circle"></i> This is a valid result.</div>
+  <% } %>
+
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-person"></i> Student Information</div>
+    <div class="card-body">
+      <div class="info-row">
+        <span class="info-label">Name</span>
+        <span class="info-value"><%= result.student.first_name %> <%= result.student.middle_name ? result.student.middle_name + ' ' : '' %><%= result.student.last_name %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Reg No</span>
+        <span class="info-value"><%= result.student.reg_no %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Class</span>
+        <span class="info-value"><%= result.student.class_name %><%= result.student.class_arm ? ' - ' + result.student.class_arm : '' %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Session</span>
+        <span class="info-value"><%= result.session.name %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Term</span>
+        <span class="info-value"><%= result.term.name %></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Generated</span>
+        <span class="info-value"><%= result.verification.created_at %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><i class="bi bi-table"></i> Results</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>CA</th>
+              <th>Exam</th>
+              <th>Total</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% result.results.forEach(function(r) { %>
+              <tr>
+                <td><strong><%= r.subject_name %></strong></td>
+                <td><%= r.ca_score %></td>
+                <td><%= r.exam_score %></td>
+                <td><strong><%= r.total %></strong></td>
+                <td><span class="badge bg-primary"><%= r.grade %></span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% } %>

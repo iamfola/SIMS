@@ -1,0 +1,3 @@
+SIMS is running on http://localhost:3001
+Access from other devices: http://YOUR_IP_ADDRESS:3001
+Default admin: username=admin, password=admin123

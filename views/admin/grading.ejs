@@ -1,0 +1,76 @@
+<h2 class="mb-4">Grading System</h2>
+<div class="row">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Add Grade</div>
+      <div class="card-body">
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <form method="POST" action="/admin/grading">
+          <div class="mb-3">
+            <label for="grade" class="form-label">Grade</label>
+            <input type="text" class="form-control" id="grade" name="grade" maxlength="2" required>
+          </div>
+          <div class="mb-3">
+            <label for="min_score" class="form-label">Min Score</label>
+            <input type="number" class="form-control" id="min_score" name="min_score" min="0" max="100" required>
+          </div>
+          <div class="mb-3">
+            <label for="max_score" class="form-label">Max Score</label>
+            <input type="number" class="form-control" id="max_score" name="max_score" min="0" max="100" required>
+          </div>
+          <div class="mb-3">
+            <label for="remark" class="form-label">Remark</label>
+            <input type="text" class="form-control" id="remark" name="remark">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Add Grade</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">Grading Scale</div>
+      <div class="card-body">
+        <table class="table table-striped" id="gradingTable">
+          <thead>
+            <tr>
+              <th>Grade</th>
+              <th>Min Score</th>
+              <th>Max Score</th>
+              <th>Remark</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% grades.forEach(function(g) { %>
+              <tr data-id="<%= g.id %>">
+                <td><%= g.grade %></td>
+                <td><%= g.min_score %></td>
+                <td><%= g.max_score %></td>
+                <td><%= g.remark || '--' %></td>
+                <td>
+                  <button class="btn btn-sm btn-danger delete-grade" data-id="<%= g.id %>">Delete</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (grades.length === 0) { %>
+          <p class="text-muted">No grades defined.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('.delete-grade').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Delete this grade?')) {
+        const res = await fetch('/admin/grading/' + this.dataset.id, { method: 'DELETE' });
+        if (res.ok) location.reload();
+      }
+    });
+  });
+</script>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= school.school_name %> - <%= typeof title !== 'undefined' ? title : 'School Management System' %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: <%= school.primary_color %>;
+      --primary-dark: <%= school.primary_color %>;
+      --primary-light: rgba(<%= parseInt(school.primary_color.slice(1,3),16) %>, <%= parseInt(school.primary_color.slice(3,5),16) %>, <%= parseInt(school.primary_color.slice(5,7),16) %>, 0.12);
+    }
+  </style>
+</head>
+<body>
+  <% if (typeof user !== 'undefined' && user && user.role) { %>
+  <div class="d-flex" id="wrapper">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <h4>
+          <% if (school.logo_path) { %>
+            <img src="<%= school.logo_path %>" alt="" style="height: 24px; width: auto; margin-right: 0;">
+          <% } else { %>
+            <i class="bi bi-building"></i>
+          <% } %>
+          <span class="brand-text"><%= school.school_short_name %></span>
+        </h4>
+      </div>
+      <div class="sidebar-heading"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %> Panel</div>
+      <div class="list-group list-group-flush">
+        <% if (user.role === 'admin') { %>
+          <a href="/admin/dashboard" class="list-group-item list-group-item-action sidebar-item" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="nav-text">Dashboard</span></a>
+          <a href="/admin/sessions" class="list-group-item list-group-item-action sidebar-item" title="Sessions & Terms"><i class="bi bi-calendar-range"></i> <span class="nav-text">Sessions & Terms</span></a>
+          <a href="/admin/classes" class="list-group-item list-group-item-action sidebar-item" title="Classes"><i class="bi bi-book"></i> <span class="nav-text">Classes</span></a>
+          <a href="/admin/subjects" class="list-group-item list-group-item-action sidebar-item" title="Subjects"><i class="bi bi-journal-text"></i> <span class="nav-text">Subjects</span></a>
+          <a href="/admin/teachers" class="list-group-item list-group-item-action sidebar-item" title="Teachers"><i class="bi bi-person-workspace"></i> <span class="nav-text">Teachers</span></a>
+          <a href="/admin/students" class="list-group-item list-group-item-action sidebar-item" title="Students"><i class="bi bi-people"></i> <span class="nav-text">Students</span></a>
+          <a href="/admin/grading" class="list-group-item list-group-item-action sidebar-item" title="Grading System"><i class="bi bi-award"></i> <span class="nav-text">Grading System</span></a>
+          <a href="/admin/results" class="list-group-item list-group-item-action sidebar-item" title="Results Approval"><i class="bi bi-check-circle"></i> <span class="nav-text">Results Approval</span></a>
+          <a href="/admin/attendance" class="list-group-item list-group-item-action sidebar-item" title="Attendance"><i class="bi bi-calendar-check"></i> <span class="nav-text">Attendance</span></a>
+          <a href="/admin/newsletter" class="list-group-item list-group-item-action sidebar-item" title="Newsletter"><i class="bi bi-megaphone"></i> <span class="nav-text">Newsletter</span></a>
+          <a href="/admin/school-settings" class="list-group-item list-group-item-action sidebar-item" title="School Settings"><i class="bi bi-gear"></i> <span class="nav-text">School Settings</span></a>
+          <a href="/admin/verify" class="list-group-item list-group-item-action sidebar-item" title="Verify Result"><i class="bi bi-shield-check"></i> <span class="nav-text">Verify Result</span></a>
+        <% } else if (user.role === 'teacher') { %>
+          <a href="/teacher/dashboard" class="list-group-item list-group-item-action sidebar-item" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="nav-text">Dashboard</span></a>
+          <a href="/teacher/students" class="list-group-item list-group-item-action sidebar-item" title="My Students"><i class="bi bi-people"></i> <span class="nav-text">My Students</span></a>
+          <a href="/teacher/enter-results" class="list-group-item list-group-item-action sidebar-item" title="Enter Results"><i class="bi bi-pencil-square"></i> <span class="nav-text">Enter Results</span></a>
+          <a href="/teacher/results" class="list-group-item list-group-item-action sidebar-item" title="My Results"><i class="bi bi-table"></i> <span class="nav-text">My Results</span></a>
+          <a href="/teacher/attendance" class="list-group-item list-group-item-action sidebar-item" title="Mark Attendance"><i class="bi bi-calendar-check"></i> <span class="nav-text">Mark Attendance</span></a>
+          <a href="/teacher/attendance-history" class="list-group-item list-group-item-action sidebar-item" title="Attendance History"><i class="bi bi-clock-history"></i> <span class="nav-text">Attendance History</span></a>
+        <% } else if (user.role === 'student') { %>
+          <a href="/student/dashboard" class="list-group-item list-group-item-action sidebar-item" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="nav-text">Dashboard</span></a>
+          <a href="/student/profile" class="list-group-item list-group-item-action sidebar-item" title="My Profile"><i class="bi bi-person"></i> <span class="nav-text">My Profile</span></a>
+          <a href="/student/subjects" class="list-group-item list-group-item-action sidebar-item" title="My Subjects"><i class="bi bi-journal-text"></i> <span class="nav-text">My Subjects</span></a>
+          <a href="/student/attendance" class="list-group-item list-group-item-action sidebar-item" title="My Attendance"><i class="bi bi-calendar-check"></i> <span class="nav-text">My Attendance</span></a>
+          <a href="/student/results" class="list-group-item list-group-item-action sidebar-item" title="My Results"><i class="bi bi-trophy"></i> <span class="nav-text">My Results</span></a>
+        <% } %>
+      </div>
+    </div>
+    <div id="page-content-wrapper">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+        <div class="container-fluid">
+        <button class="btn btn-primary" id="sidebarToggle"><i class="bi bi-list"></i></button>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+            <i class="bi bi-moon-fill" id="themeIcon"></i>
+          </button>
+          <span class="me-2 text-muted d-none d-md-inline"><i class="bi bi-calendar3"></i> <%= currentSession ? currentSession.name : 'N/A' %> | <%= currentTerm ? currentTerm.name : 'N/A' %></span>
+          <span class="me-2"><i class="bi bi-person-circle"></i> <%= user.username %></span>
+          <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</a>
+        </div>
+        </div>
+      </nav>
+      <div class="container-fluid p-4">
+        <%- body %>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <div class="modal fade" id="simsConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="simsConfirmMessage"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="simsConfirmNo">Cancel</button>
+          <button type="button" class="btn btn-danger" id="simsConfirmYes">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="simsAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Notice</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="simsAlertMessage"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function showAlert(msg) {
+      document.getElementById('simsAlertMessage').textContent = msg;
+      const modal = new bootstrap.Modal(document.getElementById('simsAlertModal'));
+      modal.show();
+    }
+    function showConfirm(msg) {
+      return new Promise(function(resolve) {
+        document.getElementById('simsConfirmMessage').textContent = msg;
+        const modalEl = document.getElementById('simsConfirmModal');
+        const modal = new bootstrap.Modal(modalEl);
+        document.getElementById('simsConfirmYes').onclick = function() { modal.hide(); resolve(true); };
+        document.getElementById('simsConfirmNo').onclick = function() { modal.hide(); resolve(false); };
+        modalEl.addEventListener('hidden.bs.modal', function() { resolve(false); }, { once: true });
+        modal.show();
+      });
+    }
+  </script>
+  <script>
+    var toggle = document.getElementById('sidebarToggle');
+    if (toggle) {
+      toggle.addEventListener('click', function() {
+        document.body.classList.toggle('sidebar-expanded');
+      });
+    }
+
+    var items = document.querySelectorAll('.sidebar-item');
+    var currentPage = window.location.pathname;
+    items.forEach(function(item) {
+      if (item.getAttribute('href') === currentPage) {
+        item.classList.add('active');
+      }
+    });
+
+    // Dark Mode Toggle
+    (function() {
+      var theme = localStorage.getItem('sims-theme');
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        document.getElementById('themeIcon').className = 'bi bi-sun-fill';
+      }
+      document.getElementById('themeToggle').addEventListener('click', function() {
+        var html = document.documentElement;
+        var isDark = html.getAttribute('data-bs-theme') === 'dark';
+        if (isDark) {
+          html.removeAttribute('data-bs-theme');
+          localStorage.setItem('sims-theme', 'light');
+          document.getElementById('themeIcon').className = 'bi bi-moon-fill';
+        } else {
+          html.setAttribute('data-bs-theme', 'dark');
+          localStorage.setItem('sims-theme', 'dark');
+          document.getElementById('themeIcon').className = 'bi bi-sun-fill';
+        }
+      });
+    })();
+  </script>
+  <% } else { %>
+    <%- body %>
+  <% } %>
+</body>
+</html>

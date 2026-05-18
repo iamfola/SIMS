@@ -1,0 +1,38 @@
+<div class="welcome-header">
+  <div>
+    <h2>My Subjects</h2>
+    <p class="page-subtitle">Academic subjects assigned to your class</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><i class="bi bi-journal-text"></i> Subjects</div>
+  <div class="card-body p-0">
+    <% if (subjects.length > 0) { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Teacher</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% subjects.forEach(function(cs) { %>
+              <tr>
+                <td><strong><%= cs.subject_name %></strong></td>
+                <td><%- cs.teacher_name ? cs.teacher_name : '<span class="text-muted">Not assigned</span>' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="bi bi-book"></i>
+        <h5>No Subjects</h5>
+        <p>No subjects have been assigned to your class yet.</p>
+      </div>
+    <% } %>
+  </div>
+</div>

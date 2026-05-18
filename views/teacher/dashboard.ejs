@@ -1,0 +1,127 @@
+<div class="welcome-header">
+  <div>
+    <h2>Teacher Dashboard</h2>
+    <p class="page-subtitle">Welcome back, manage your class and students</p>
+  </div>
+</div>
+
+<% if (typeof currentSession !== 'undefined' && currentSession && typeof currentTerm !== 'undefined' && currentTerm) { %>
+  <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-calendar3 me-1"></i> <strong><%= currentSession.name %></strong> &mdash; <strong><%= currentTerm.name %></strong></span>
+  </div>
+<% } %>
+
+<% if (teacher && teacher.class_id) { %>
+  <div class="welcome-banner mb-4">
+    <h2><i class="bi bi-person-workspace me-2"></i> <%= teacher.class_name %><%= teacher.class_arm ? ' ' + teacher.class_arm : '' %></h2>
+    <p>You are assigned to this class. View students, mark attendance, and enter results.</p>
+    <div class="welcome-stats">
+      <div class="welcome-stat">
+        <div class="ws-number"><%= classStudents.length %></div>
+        <div class="ws-label">Students</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="ws-number"><%= attendanceToday %></div>
+        <div class="ws-label">Present Today</div>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <div class="alert alert-warning d-flex align-items-center">
+    <i class="bi bi-exclamation-triangle me-2 fs-4"></i>
+    <span>You are not assigned to any class. Please contact the admin.</span>
+  </div>
+<% } %>
+
+<div class="row g-3 stagger-children">
+  <div class="col-md-4 col-6">
+    <div class="stat-card bg-primary">
+      <div class="stat-icon"><i class="bi bi-people"></i></div>
+      <div class="stat-number"><%= classStudents.length %></div>
+      <div class="stat-label">My Students</div>
+      <a href="/teacher/students" class="stat-link">View <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-4 col-6">
+    <div class="stat-card bg-success">
+      <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+      <div class="stat-number"><%= attendanceToday %></div>
+      <div class="stat-label">Present Today</div>
+      <a href="/teacher/attendance" class="stat-link">Mark <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-4 col-6">
+    <div class="stat-card bg-warning">
+      <div class="stat-icon"><i class="bi bi-pencil-square"></i></div>
+      <div class="stat-number"><%= pendingResults %></div>
+      <div class="stat-label">Pending Results</div>
+      <a href="/teacher/enter-results" class="stat-link">Upload <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-2">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-lightning"></i> Quick Actions</div>
+      <div class="card-body">
+        <div class="quick-action-grid">
+          <a href="/teacher/students" class="quick-action-item">
+            <i class="bi bi-people"></i>
+            <span>View Students</span>
+          </a>
+          <a href="/teacher/enter-results" class="quick-action-item">
+            <i class="bi bi-pencil-square"></i>
+            <span>Enter Results</span>
+          </a>
+          <a href="/teacher/attendance" class="quick-action-item">
+            <i class="bi bi-calendar-check"></i>
+            <span>Mark Attendance</span>
+          </a>
+          <a href="/teacher/results" class="quick-action-item">
+            <i class="bi bi-table"></i>
+            <span>View Results</span>
+          </a>
+          <a href="/teacher/attendance-history" class="quick-action-item">
+            <i class="bi bi-clock-history"></i>
+            <span>History</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-activity"></i> Class Overview</div>
+      <div class="card-body">
+        <% if (teacher && teacher.class_id) { %>
+          <ul class="activity-list">
+            <li class="activity-item">
+              <div class="activity-icon bg-primary-light"><i class="bi bi-people"></i></div>
+              <div class="activity-content">
+                <p class="activity-text"><strong><%= classStudents.length %></strong> student<%= classStudents.length !== 1 ? 's' : '' %> in your class</p>
+                <p class="activity-time"><%= teacher.class_name %><%= teacher.class_arm ? ' ' + teacher.class_arm : '' %></p>
+              </div>
+            </li>
+            <li class="activity-item">
+              <div class="activity-icon bg-success-light"><i class="bi bi-calendar-check"></i></div>
+              <div class="activity-content">
+                <p class="activity-text"><strong><%= attendanceToday %></strong> student<%= attendanceToday !== 1 ? 's' : '' %> present today</p>
+                <p class="activity-time">Current attendance count</p>
+              </div>
+            </li>
+            <li class="activity-item">
+              <div class="activity-icon bg-warning-light"><i class="bi bi-pencil-square"></i></div>
+              <div class="activity-content">
+                <p class="activity-text"><strong><%= pendingResults %></strong> result<%= pendingResults !== 1 ? 's' : '' %> pending entry</p>
+                <p class="activity-time">Needs to be uploaded</p>
+              </div>
+            </li>
+          </ul>
+        <% } else { %>
+          <p class="text-muted">No class data available.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>

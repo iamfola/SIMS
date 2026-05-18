@@ -1,0 +1,169 @@
+<h2 class="mb-4">Manage Subjects</h2>
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-header">Add Subject</div>
+      <div class="card-body">
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <form method="POST" action="/admin/subjects">
+          <div class="mb-3">
+            <label for="name" class="form-label">Subject Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Add Subject</button>
+        </form>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Assign Subject to Class</div>
+      <div class="card-body">
+        <form method="POST" action="/admin/class-subjects">
+          <div class="mb-3">
+            <label for="class_id" class="form-label">Class</label>
+            <select class="form-select" id="class_id" name="class_id" required>
+              <% classes.forEach(function(c) {
+                let div = '';
+                if (['JSS1','JSS2','JSS3'].includes(c.name)) div = 'Junior';
+                else if (c.arm === 'A') div = 'Science';
+                else if (c.arm === 'B') div = 'Art';
+                else if (c.arm === 'C') div = 'Commercial';
+              %>
+                <option value="<%= c.id %>"><%= c.name %><%= c.arm ? ' - ' + c.arm : '' %><%= div ? ' (' + div + ')' : '' %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="subject_id" class="form-label">Subject</label>
+            <select class="form-select" id="subject_id" name="subject_id" required>
+              <% subjects.forEach(function(s) { %>
+                <option value="<%= s.id %>"><%= s.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="teacher_id" class="form-label">Teacher (Optional)</label>
+            <select class="form-select" id="teacher_id" name="teacher_id">
+              <option value="">-- None --</option>
+              <% teachers.forEach(function(t) { %>
+                <option value="<%= t.id %>"><%= t.first_name %> <%= t.middle_name ? t.middle_name + ' ' : '' %><%= t.last_name %><% if (t.class_name) { %> (<%= t.class_name %><%= t.class_arm ? ' ' + t.class_arm : '' %>)<% } %></option>
+              <% }) %>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-success w-100">Assign</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <% if (groupedClasses.length === 0) { %>
+      <div class="card">
+        <div class="card-body">
+          <p class="text-muted">No assignments yet.</p>
+        </div>
+      </div>
+    <% } else { %>
+      <% function divisionLabel(name, arm) {
+  if (['JSS1','JSS2','JSS3'].includes(name)) return '<span class="badge bg-secondary ms-2">Junior</span>';
+  if (arm === 'A') return '<span class="badge bg-success ms-2">Science</span>';
+  if (arm === 'B') return '<span class="badge bg-warning text-dark ms-2">Art</span>';
+  if (arm === 'C') return '<span class="badge bg-info ms-2">Commercial</span>';
+  return '';
+} %>
+      <% groupedClasses.forEach(function(cls) { %>
+        <div class="card mb-3">
+          <div class="card-header bg-primary text-white">
+            <strong><%= cls.class_name %><%= cls.class_arm ? ' ' + cls.class_arm : '' %></strong>
+            <%- divisionLabel(cls.class_name, cls.class_arm) %>
+            <span class="badge bg-light text-dark"><%= cls.subjects.length %> Subjects</span>
+          </div>
+          <div class="card-body">
+            <div class="list-group">
+              <% cls.subjects.forEach(function(cs) { %>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <strong><%= cs.subject_name %></strong>
+                    <span class="text-muted small teacher-label" data-cs-id="<%= cs.id %>">
+                      <i class="bi bi-person"></i>
+                      <span class="teacher-name"><%= cs.teacher_name || 'No teacher assigned' %></span>
+                    </span>
+                    <button class="btn btn-sm btn-outline-secondary edit-teacher-btn" data-cs-id="<%= cs.id %>" data-teacher-id="<%= cs.teacher_id || '' %>" title="Change teacher">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
+                  <div>
+                    <button class="btn btn-sm btn-danger delete-cs-btn" data-id="<%= cs.id %>">Delete</button>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+</div>
+
+<div class="modal fade" id="teacherModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Change Teacher</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <select class="form-select" id="teacherSelect">
+          <option value="">-- None --</option>
+          <% teachers.forEach(function(t) { %>
+            <option value="<%= t.id %>"><%= t.first_name %> <%= t.middle_name ? t.middle_name + ' ' : '' %><%= t.last_name %><% if (t.class_name) { %> (<%= t.class_name %><%= t.class_arm ? ' ' + t.class_arm : '' %>)<% } %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveTeacherBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let editingCsId = null;
+
+  document.querySelectorAll('.delete-cs-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Remove this assignment?')) {
+        const res = await fetch('/admin/class-subjects/' + this.dataset.id, { method: 'DELETE' });
+        if (res.ok) location.reload();
+      }
+    });
+  });
+
+  document.querySelectorAll('.edit-teacher-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      editingCsId = this.dataset.csId;
+      document.getElementById('teacherSelect').value = this.dataset.teacherId || '';
+      new bootstrap.Modal(document.getElementById('teacherModal')).show();
+    });
+  });
+
+  document.getElementById('saveTeacherBtn').addEventListener('click', async function() {
+    if (!editingCsId) return;
+    const teacherId = document.getElementById('teacherSelect').value || null;
+
+    const res = await fetch('/admin/class-subjects/' + editingCsId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teacher_id: teacherId })
+    });
+
+    if (res.ok) {
+      location.reload();
+    } else {
+      showAlert('Failed to update teacher assignment');
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('teacherModal')).hide();
+  });
+</script>

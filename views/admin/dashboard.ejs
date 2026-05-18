@@ -1,0 +1,145 @@
+<div class="welcome-header">
+  <div>
+    <h2>Admin Dashboard</h2>
+    <p class="page-subtitle">Overview of your school management system</p>
+  </div>
+</div>
+
+<% if (typeof currentSession !== 'undefined' && currentSession && typeof currentTerm !== 'undefined' && currentTerm) { %>
+  <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-calendar3 me-1"></i> <strong><%= currentSession.name %></strong> &mdash; <strong><%= currentTerm.name %></strong></span>
+    <a href="/admin/sessions" class="btn btn-sm btn-outline-primary">Manage</a>
+  </div>
+<% } %>
+
+<div class="row g-3 stagger-children">
+  <div class="col-md-3 col-6">
+    <div class="stat-card bg-primary">
+      <div class="stat-icon"><i class="bi bi-people"></i></div>
+      <div class="stat-number"><%= studentCount %></div>
+      <div class="stat-label">Students</div>
+      <a href="/admin/students" class="stat-link">Manage <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card bg-success">
+      <div class="stat-icon"><i class="bi bi-person-workspace"></i></div>
+      <div class="stat-number"><%= teacherCount %></div>
+      <div class="stat-label">Teachers</div>
+      <a href="/admin/teachers" class="stat-link">Manage <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card bg-purple">
+      <div class="stat-icon"><i class="bi bi-book"></i></div>
+      <div class="stat-number"><%= classCount %></div>
+      <div class="stat-label">Classes</div>
+      <a href="/admin/classes" class="stat-link">Manage <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card bg-warning">
+      <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+      <div class="stat-number"><%= pendingResults %></div>
+      <div class="stat-label">Pending Results</div>
+      <a href="/admin/results" class="stat-link">Review <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card bg-danger">
+      <div class="stat-icon"><i class="bi bi-lock"></i></div>
+      <div class="stat-number"><%= lockedCount %></div>
+      <div class="stat-label">Locked Accounts</div>
+      <a href="/admin/lockouts" class="stat-link">Manage <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="stat-card bg-info">
+      <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+      <div class="stat-number"><%= typeof approvedResults !== 'undefined' ? approvedResults : 0 %></div>
+      <div class="stat-label">Approved Results</div>
+      <a href="/admin/results" class="stat-link">View <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-2">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-lightning"></i> Quick Actions</div>
+      <div class="card-body">
+        <div class="quick-action-grid">
+          <a href="/admin/students" class="quick-action-item">
+            <i class="bi bi-person-plus"></i>
+            <span>Add Student</span>
+          </a>
+          <a href="/admin/teachers" class="quick-action-item">
+            <i class="bi bi-person-plus"></i>
+            <span>Add Teacher</span>
+          </a>
+          <a href="/admin/classes" class="quick-action-item">
+            <i class="bi bi-plus-circle"></i>
+            <span>Add Class</span>
+          </a>
+          <a href="/admin/sessions" class="quick-action-item">
+            <i class="bi bi-calendar-range"></i>
+            <span>Sessions</span>
+          </a>
+          <a href="/admin/subjects" class="quick-action-item">
+            <i class="bi bi-journal-text"></i>
+            <span>Subjects</span>
+          </a>
+          <a href="/admin/grading" class="quick-action-item">
+            <i class="bi bi-award"></i>
+            <span>Grading</span>
+          </a>
+          <a href="/admin/attendance" class="quick-action-item">
+            <i class="bi bi-calendar-check"></i>
+            <span>Attendance</span>
+          </a>
+          <a href="/admin/newsletter" class="quick-action-item">
+            <i class="bi bi-megaphone"></i>
+            <span>Newsletter</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-activity"></i> System Overview</div>
+      <div class="card-body">
+        <ul class="activity-list">
+          <li class="activity-item">
+            <div class="activity-icon bg-primary-light"><i class="bi bi-people"></i></div>
+            <div class="activity-content">
+              <p class="activity-text"><%= studentCount %> students enrolled across <strong><%= classCount %></strong> classes</p>
+              <p class="activity-time">Total registered students</p>
+            </div>
+          </li>
+          <li class="activity-item">
+            <div class="activity-icon bg-success-light"><i class="bi bi-person-workspace"></i></div>
+            <div class="activity-content">
+              <p class="activity-text"><%= teacherCount %> teachers assigned</p>
+              <p class="activity-time">Active teaching staff</p>
+            </div>
+          </li>
+          <li class="activity-item">
+            <div class="activity-icon bg-warning-light"><i class="bi bi-clock-history"></i></div>
+            <div class="activity-content">
+              <p class="activity-text"><strong><%= pendingResults %></strong> results pending approval</p>
+              <p class="activity-time">Requires your review</p>
+            </div>
+          </li>
+          <li class="activity-item">
+            <div class="activity-icon bg-danger-light"><i class="bi bi-lock"></i></div>
+            <div class="activity-content">
+              <p class="activity-text"><strong><%= lockedCount %></strong> locked account<%= lockedCount !== 1 ? 's' : '' %></p>
+              <p class="activity-time">Needs account unlock</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

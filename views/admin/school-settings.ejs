@@ -1,0 +1,127 @@
+<div class="welcome-header">
+  <div>
+    <h2>School Settings</h2>
+    <p class="page-subtitle">Customize your school name, logo, and theme colors</p>
+  </div>
+</div>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i> <%= success %></div>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-1"></i> <%= error %></div>
+<% } %>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-gear"></i> General Settings</div>
+      <div class="card-body">
+        <form method="POST" action="/admin/school-settings">
+          <div class="mb-3">
+            <label for="school_name" class="form-label">School Name</label>
+            <input type="text" class="form-control" id="school_name" name="school_name"
+              value="<%= school.school_name %>" required>
+          </div>
+          <div class="mb-3">
+            <label for="school_short_name" class="form-label">Short Name / Acronym</label>
+            <input type="text" class="form-control" id="school_short_name" name="school_short_name"
+              value="<%= school.school_short_name %>" placeholder="e.g. SMS" required>
+          </div>
+          <div class="mb-3">
+            <label for="primary_color" class="form-label">Primary Color</label>
+            <div class="d-flex align-items-center gap-3">
+              <input type="color" class="form-control form-control-color" id="primary_color" name="primary_color"
+                value="<%= school.primary_color %>" style="width: 60px; height: 40px; padding: 2px;">
+              <input type="text" class="form-control" id="primary_color_hex" style="max-width: 120px;"
+                value="<%= school.primary_color %>" oninput="document.getElementById('primary_color').value=this.value">
+            </div>
+            <small class="text-muted">This color is used for buttons, links, and accents across the UI.</small>
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-image"></i> School Logo</div>
+      <div class="card-body text-center">
+        <% if (school.logo_path) { %>
+          <div class="mb-3">
+            <img src="<%= school.logo_path %>" alt="School Logo"
+              style="max-height: 120px; max-width: 100%; border-radius: 8px; border: 2px solid var(--border-color);">
+          </div>
+          <form method="POST" action="/admin/school-settings/remove-logo" class="mb-3">
+            <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Remove Logo</button>
+          </form>
+        <% } else { %>
+          <div class="empty-state py-4">
+            <i class="bi bi-image"></i>
+            <h5>No Logo</h5>
+            <p>Upload a school logo to display in the sidebar and login page.</p>
+          </div>
+        <% } %>
+        <form method="POST" action="/admin/school-settings/logo" enctype="multipart/form-data">
+          <div class="mb-3">
+            <input type="file" class="form-control" name="logo" accept="image/*" required>
+            <small class="text-muted">Max 2MB. PNG, JPG, or SVG.</small>
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Upload Logo</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header"><i class="bi bi-eye"></i> Preview</div>
+      <div class="card-body">
+        <div class="p-3 rounded" style="background: var(--bg); border: 1px solid var(--border-color);">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <% if (school.logo_path) { %>
+              <img src="<%= school.logo_path %>" alt="" style="height: 28px; width: auto;">
+            <% } else { %>
+              <i class="bi bi-building" style="color: <%= school.primary_color %>; font-size: 1.3rem;"></i>
+            <% } %>
+            <strong style="color: <%= school.primary_color %>;"><%= school.school_short_name %></strong>
+          </div>
+          <div style="height: 4px; background: <%= school.primary_color %>; border-radius: 2px;"></div>
+          <p class="text-muted small mt-2 mb-0">This is how your school branding will appear.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header"><i class="bi bi-person-gear"></i> Account Settings</div>
+  <div class="card-body">
+    <form method="POST" action="/admin/account/update" onsubmit="return confirm('Update your account details?')">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="admin-username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="admin-username" name="username" value="<%= adminUser.username %>">
+        </div>
+        <div class="col-md-6">
+          <label for="admin-email" class="form-label">Email (for password recovery)</label>
+          <input type="email" class="form-control" id="admin-email" name="email" value="<%= adminUser.email || '' %>" placeholder="admin@school.com">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-save"></i> Save Account</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header"><i class="bi bi-shield-exclamation"></i> Advanced Settings</div>
+  <div class="card-body">
+    <p class="text-muted mb-2">Configure email server settings for result notifications and password resets.</p>
+    <a href="/admin/email-settings" class="btn btn-outline-secondary btn-sm"><i class="bi bi-envelope"></i> Email Configuration</a>
+  </div>
+</div>
+
+<script>
+  document.getElementById('primary_color').addEventListener('input', function() {
+    document.getElementById('primary_color_hex').value = this.value;
+  });
+</script>

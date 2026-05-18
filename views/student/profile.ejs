@@ -1,0 +1,80 @@
+<div class="welcome-header">
+  <div>
+    <h2>My Profile</h2>
+    <p class="page-subtitle">Your personal and academic information</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-person"></i> Personal Information</div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-value"><%= student.first_name %> <%= student.middle_name ? student.middle_name + ' ' : '' %><%= student.last_name %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Reg No</span>
+          <span class="info-value"><strong><%= student.reg_no %></strong></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Age</span>
+          <span class="info-value"><%= student.age %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Class</span>
+          <span class="info-value"><%= student.class_name %><%= student.class_arm ? ' - ' + student.class_arm : '' %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Username</span>
+          <span class="info-value"><%= student.username %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value">
+            <span id="email-display"><%= student.email || 'Not set' %></span>
+            <button class="btn btn-sm btn-outline-primary ms-2" onclick="toggleEmailEdit()"><i class="bi bi-pencil"></i></button>
+          </span>
+        </div>
+        <div id="email-edit" class="d-none mt-3 p-3 rounded" style="background: var(--bg); border: 1px solid var(--border-color);">
+          <form method="POST" action="/student/setup-email" class="d-flex gap-2">
+            <input type="email" name="email" class="form-control" value="<%= student.email || '' %>" required>
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleEmailEdit()">Cancel</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-journal-text"></i> My Subjects</div>
+      <div class="card-body p-0">
+        <% if (subjects.length > 0) { %>
+          <ul class="list-group list-group-flush" style="border: none;">
+            <% subjects.forEach(function(cs) { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center" style="border: none; border-bottom: 1px solid var(--border-color); background: transparent; padding: 14px 22px;">
+                <span style="font-weight: 500; color: var(--text-primary);"><%= cs.subject_name %></span>
+                <small class="text-muted"><%= cs.teacher_name ? cs.teacher_name : 'No teacher' %></small>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <div class="empty-state">
+            <i class="bi bi-book"></i>
+            <h5>No Subjects</h5>
+            <p>No subjects have been assigned to your class yet.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleEmailEdit() {
+  document.getElementById('email-display').parentElement.classList.toggle('d-none');
+  document.getElementById('email-edit').classList.toggle('d-none');
+}
+</script>

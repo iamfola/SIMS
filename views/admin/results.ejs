@@ -1,0 +1,223 @@
+<h2 class="mb-4">Results Approval</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" action="/admin/results" class="row g-3">
+      <div class="col-md-3">
+        <label for="session_id" class="form-label">Session</label>
+        <select class="form-select" id="session_id" name="session_id">
+          <option value="">All Sessions</option>
+          <% sessions.forEach(function(s) { %>
+            <option value="<%= s.id %>" <%= selectedSessionId == s.id ? 'selected' : '' %>><%= s.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="term_id" class="form-label">Term</label>
+        <select class="form-select" id="term_id" name="term_id">
+          <option value="">All Terms</option>
+          <% if (typeof availableTerms !== 'undefined' && availableTerms.length > 0) { %>
+            <% availableTerms.forEach(function(t) { %>
+              <option value="<%= t.id %>" <%= selectedTermId == t.id ? 'selected' : '' %>><%= t.name %></option>
+            <% }) %>
+          <% } else if (typeof currentTerm !== 'undefined' && currentTerm) { %>
+            <option value="<%= currentTerm.id %>" <%= selectedTermId == currentTerm.id ? 'selected' : '' %>><%= currentTerm.name %></option>
+          <% } %>
+        </select>
+      </div>
+      <div class="col-md-6 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <span class="ms-3 text-muted">Active: <%= currentSession ? currentSession.name : 'N/A' %> | <%= currentTerm ? currentTerm.name : 'N/A' %></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Class List -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Classes</div>
+      <div class="card-body">
+        <div class="list-group">
+          <% classes.forEach(function(c) { %>
+            <a href="/admin/results?class_id=<%= c.id %>" class="list-group-item list-group-item-action <%= selectedClass && selectedClass.id == c.id ? 'active' : '' %>">
+              <%= c.name %><%= c.arm ? ' ' + c.arm : '' %>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student List -->
+  <div class="col-md-4">
+    <% if (selectedClass) { %>
+      <div class="card">
+        <div class="card-header"><%= selectedClass.name %><%= selectedClass.arm ? ' ' + selectedClass.arm : '' %> - Students</div>
+        <div class="card-body">
+          <div class="list-group">
+            <% students.forEach(function(s) { %>
+              <a href="/admin/results?class_id=<%= selectedClass.id %>&student_id=<%= s.id %>" class="list-group-item list-group-item-action <%= selectedStudent && selectedStudent.id == s.id ? 'active' : '' %>">
+                <strong><%= s.reg_no %></strong> - <%= s.first_name %> <%= s.middle_name ? s.middle_name + ' ' : '' %><%= s.last_name %>
+              </a>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="card">
+        <div class="card-body text-center text-muted">
+          <i class="bi bi-arrow-left" style="font-size: 2rem;"></i>
+          <p>Select a class to view students</p>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+   <!-- Results -->
+  <div class="col-md-4">
+    <% if (selectedStudent) { %>
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Results for <%= selectedStudent.first_name %> <%= selectedStudent.middle_name ? selectedStudent.middle_name + ' ' : '' %><%= selectedStudent.last_name %></span>
+          <% if (pendingCount > 0) { %>
+            <button class="btn btn-sm btn-success approve-all-btn" data-student-id="<%= selectedStudent.id %>">
+              <i class="bi bi-check-all"></i> Approve All (<%= pendingCount %>)
+            </button>
+          <% } %>
+        </div>
+        <div class="card-body">
+          <% if (results.length === 0) { %>
+            <p class="text-muted">No results found for this student.</p>
+          <% } else { %>
+            <div class="list-group">
+              <% results.forEach(function(r) { %>
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between">
+                    <strong><%= r.subject_name %></strong>
+                    <span class="badge <%= r.status === 'approved' ? 'bg-success' : r.status === 'rejected' ? 'bg-danger' : 'bg-warning' %>">
+                      <%= r.status %>
+                    </span>
+                  </div>
+                  <div class="small">
+                    CA: <%= r.ca_score %> | Exam: <%= r.exam_score %> | Total: <strong><%= r.total %></strong> | Grade: <strong><%= r.grade %></strong>
+                  </div>
+                  <div class="small text-muted">
+                    Term: <%= r.term %> | Session: <%= r.session %>
+                  </div>
+                  <div class="mt-2">
+                    <% if (r.status === 'pending') { %>
+                      <button class="btn btn-sm btn-success approve-btn" data-id="<%= r.id %>">Approve</button>
+                      <button class="btn btn-sm btn-danger reject-btn" data-id="<%= r.id %>">Reject</button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-primary edit-result-btn" data-id="<%= r.id %>" data-ca="<%= r.ca_score %>" data-exam="<%= r.exam_score %>">Edit</button>
+                    <% } %>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="card">
+        <div class="card-body text-center text-muted">
+          <i class="bi bi-arrow-left" style="font-size: 2rem;"></i>
+          <p>Select a student to view results</p>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Edit Result Modal -->
+<div class="modal fade" id="editResultModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Result</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editResultForm">
+          <input type="hidden" id="edit_result_id">
+          <div class="mb-3">
+            <label for="edit_ca" class="form-label">CA Score</label>
+            <input type="number" step="0.01" class="form-control" id="edit_ca" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_exam" class="form-label">Exam Score</label>
+            <input type="number" step="0.01" class="form-control" id="edit_exam" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveResultBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.approve-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Approve this result?')) {
+        const res = await fetch('/admin/results/' + this.dataset.id + '/approve', { method: 'POST' });
+        if (res.ok) location.reload();
+      }
+    });
+  });
+  document.querySelectorAll('.reject-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Reject this result?')) {
+        const res = await fetch('/admin/results/' + this.dataset.id + '/reject', { method: 'POST' });
+        if (res.ok) location.reload();
+      }
+    });
+  });
+
+  document.querySelectorAll('.edit-result-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.getElementById('edit_result_id').value = this.dataset.id;
+      document.getElementById('edit_ca').value = this.dataset.ca;
+      document.getElementById('edit_exam').value = this.dataset.exam;
+      new bootstrap.Modal(document.getElementById('editResultModal')).show();
+    });
+  });
+
+   document.getElementById('saveResultBtn').addEventListener('click', async function() {
+    const resultId = document.getElementById('edit_result_id').value;
+    const ca = document.getElementById('edit_ca').value;
+    const exam = document.getElementById('edit_exam').value;
+
+    const res = await fetch('/admin/results/' + resultId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ca_score: ca, exam_score: exam })
+    });
+
+    if (res.ok) {
+      location.reload();
+    } else {
+      showAlert('Failed to update result');
+    }
+  });
+
+  const approveAllBtn = document.querySelector('.approve-all-btn');
+  if (approveAllBtn) {
+    approveAllBtn.addEventListener('click', async function() {
+      const studentId = this.dataset.studentId;
+      if (await showConfirm('Approve ALL pending results for this student?')) {
+        const res = await fetch('/admin/results/student/' + studentId + '/approve-all', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          location.reload();
+        } else {
+          showAlert('Failed to approve results');
+        }
+      }
+    });
+  }
+</script>

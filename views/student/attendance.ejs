@@ -1,0 +1,92 @@
+<div class="welcome-header">
+  <div>
+    <h2>My Attendance</h2>
+    <p class="page-subtitle">Your attendance records and statistics</p>
+  </div>
+</div>
+
+<% if (typeof currentSession !== 'undefined' && currentSession && typeof currentTerm !== 'undefined' && currentTerm) { %>
+  <div class="alert alert-info mb-4">
+    <i class="bi bi-calendar3"></i> Showing attendance for: <strong><%= currentSession.name %></strong> | <strong><%= currentTerm.name %></strong>
+  </div>
+<% } %>
+
+<div class="row g-3 mb-4 stagger-children">
+  <div class="col-md-2 col-4">
+    <div class="stat-card bg-primary" style="padding: 16px;">
+      <div class="stat-icon" style="font-size: 1.3rem; margin-bottom: 6px;"><i class="bi bi-calendar-week"></i></div>
+      <div class="stat-number" style="font-size: 1.5rem;"><%= stats.total %></div>
+      <div class="stat-label" style="font-size: 0.7rem;">Total Days</div>
+    </div>
+  </div>
+  <div class="col-md-2 col-4">
+    <div class="stat-card bg-success" style="padding: 16px;">
+      <div class="stat-icon" style="font-size: 1.3rem; margin-bottom: 6px;"><i class="bi bi-check-circle"></i></div>
+      <div class="stat-number" style="font-size: 1.5rem;"><%= stats.present %></div>
+      <div class="stat-label" style="font-size: 0.7rem;">Present</div>
+    </div>
+  </div>
+  <div class="col-md-2 col-4">
+    <div class="stat-card bg-danger" style="padding: 16px;">
+      <div class="stat-icon" style="font-size: 1.3rem; margin-bottom: 6px;"><i class="bi bi-x-circle"></i></div>
+      <div class="stat-number" style="font-size: 1.5rem;"><%= stats.absent %></div>
+      <div class="stat-label" style="font-size: 0.7rem;">Absent</div>
+    </div>
+  </div>
+  <div class="col-md-2 col-4">
+    <div class="stat-card bg-warning" style="padding: 16px;">
+      <div class="stat-icon" style="font-size: 1.3rem; margin-bottom: 6px;"><i class="bi bi-clock"></i></div>
+      <div class="stat-number" style="font-size: 1.5rem;"><%= stats.late %></div>
+      <div class="stat-label" style="font-size: 0.7rem;">Late</div>
+    </div>
+  </div>
+  <div class="col-md-2 col-4">
+    <div class="stat-card bg-purple" style="padding: 16px;">
+      <div class="stat-icon" style="font-size: 1.3rem; margin-bottom: 6px;"><i class="bi bi-graph-up"></i></div>
+      <div class="stat-number" style="font-size: 1.5rem;"><%= stats.rate %>%</div>
+      <div class="stat-label" style="font-size: 0.7rem;">Rate</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><i class="bi bi-clock-history"></i> Attendance Records</div>
+  <div class="card-body p-0">
+    <% if (attendance.length > 0) { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Marked By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% attendance.forEach(function(a) { %>
+              <tr>
+                <td><%= a.date %></td>
+                <td>
+                  <% if (a.status === 'present') { %>
+                    <span class="badge bg-success">Present</span>
+                  <% } else if (a.status === 'absent') { %>
+                    <span class="badge bg-danger">Absent</span>
+                  <% } else { %>
+                    <span class="badge bg-warning">Late</span>
+                  <% } %>
+                </td>
+                <td><%= a.marked_by_name %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="bi bi-calendar-x"></i>
+        <h5>No Records</h5>
+        <p>No attendance records found for the current period.</p>
+      </div>
+    <% } %>
+  </div>
+</div>

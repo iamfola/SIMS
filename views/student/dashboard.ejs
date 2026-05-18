@@ -1,0 +1,94 @@
+<div class="welcome-header">
+  <div>
+    <h2>Welcome, <%= student.first_name %> <%= student.middle_name ? student.middle_name + ' ' : '' %><%= student.last_name %>!</h2>
+    <p class="page-subtitle">Here's your academic overview</p>
+  </div>
+</div>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i> <%= success %></div>
+<% } %>
+
+<% if (typeof currentSession !== 'undefined' && currentSession && typeof currentTerm !== 'undefined' && currentTerm) { %>
+  <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-calendar3 me-1"></i> <strong><%= currentSession.name %></strong> &mdash; <strong><%= currentTerm.name %></strong></span>
+  </div>
+<% } %>
+
+<div class="row g-3 stagger-children">
+  <div class="col-md-4 col-6">
+    <div class="stat-card bg-primary">
+      <div class="stat-icon"><i class="bi bi-person-badge"></i></div>
+      <div class="stat-number" style="font-size:1.5rem;"><%= student.reg_no %></div>
+      <div class="stat-label">Registration No.</div>
+      <a href="/student/profile" class="stat-link">Profile <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-4 col-6">
+    <div class="stat-card bg-success">
+      <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+      <div class="stat-number"><%= attendanceRate %>%</div>
+      <div class="stat-label">Attendance Rate</div>
+      <a href="/student/attendance" class="stat-link">Details <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="col-md-4 col-6">
+    <div class="stat-card bg-purple">
+      <div class="stat-icon"><i class="bi bi-trophy"></i></div>
+      <div class="stat-number"><%= approvedResults %></div>
+      <div class="stat-label">Approved Results</div>
+      <a href="/student/results" class="stat-link">View <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-2">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-info-circle"></i> My Details</div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-value"><%= student.first_name %> <%= student.middle_name ? student.middle_name + ' ' : '' %><%= student.last_name %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Class</span>
+          <span class="info-value"><%= student.class_name %><%= student.class_arm ? ' - ' + student.class_arm : '' %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Reg No</span>
+          <span class="info-value"><%= student.reg_no %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Age</span>
+          <span class="info-value"><%= student.age %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-lightning"></i> Quick Links</div>
+      <div class="card-body">
+        <div class="quick-action-grid">
+          <a href="/student/profile" class="quick-action-item">
+            <i class="bi bi-person"></i>
+            <span>My Profile</span>
+          </a>
+          <a href="/student/subjects" class="quick-action-item">
+            <i class="bi bi-journal-text"></i>
+            <span>My Subjects</span>
+          </a>
+          <a href="/student/attendance" class="quick-action-item">
+            <i class="bi bi-calendar-check"></i>
+            <span>Attendance</span>
+          </a>
+          <a href="/student/results" class="quick-action-item">
+            <i class="bi bi-trophy"></i>
+            <span>Results</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

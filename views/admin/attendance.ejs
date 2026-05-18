@@ -1,0 +1,151 @@
+<h2 class="mb-4">Attendance Monitoring</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" action="/admin/attendance" id="attendanceFilter">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label for="date" class="form-label">Date</label>
+          <input type="date" class="form-control" id="date" name="date" value="<%= selectedDate || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label for="class_id" class="form-label">Class</label>
+          <select class="form-select" id="class_id" name="class_id">
+            <option value="">All Classes</option>
+            <% classes.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= selectedClass == c.id ? 'selected' : '' %>><%= c.name %><%= c.arm ? ' - ' + c.arm : '' %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="session_id" class="form-label">Session</label>
+          <select class="form-select" id="session_id" name="session_id">
+            <option value="">All</option>
+            <% sessions.forEach(function(s) { %>
+              <option value="<%= s.id %>" <%= selectedSessionId == s.id ? 'selected' : '' %>><%= s.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<% if (attendance.length > 0) { %>
+  <div class="card mb-4" id="admin-attendance-report">
+    <div class="card-body p-0">
+      <div class="print-report-header p-3 border-bottom d-flex justify-content-between align-items-start">
+        <div>
+          <h4><%= school.school_name %></h4>
+          <p class="mb-1 text-muted" style="font-size:0.85rem;">Principal's Attendance Report</p>
+          <p class="mb-1"><strong>Class:</strong> <%= reportClassName %></p>
+          <p class="mb-1"><strong>Date:</strong> <%= reportFormattedDate %></p>
+          <p class="mb-1"><strong>Session:</strong> <%= currentSession ? currentSession.name : 'N/A' %> | <strong>Term:</strong> <%= currentTerm ? currentTerm.name : 'N/A' %></p>
+          <p class="mb-0"><strong>Total Records:</strong> <%= attendance.length %></p>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary no-print" onclick="window.print()">
+          <i class="bi bi-printer"></i> Print
+        </button>
+      </div>
+
+      <div class="p-3">
+        <div class="row mb-3">
+          <div class="col-4 text-center">
+            <div class="badge bg-success fs-6 px-3 py-2">Present: <%= reportPresent %></div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="badge bg-warning fs-6 px-3 py-2">Late: <%= reportLate %></div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="badge bg-danger fs-6 px-3 py-2">Absent: <%= reportAbsent %></div>
+          </div>
+        </div>
+
+        <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Reg No</th>
+              <th>Student Name</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% attendance.forEach(function(a, i) { %>
+              <tr>
+                <td><%= i + 1 %></td>
+                <td><strong><%= a.reg_no %></strong></td>
+                <td><%= a.student_name %></td>
+                <td>
+                  <% if (a.status === 'present') { %>
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Present</span>
+                  <% } else if (a.status === 'absent') { %>
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Absent</span>
+                  <% } else { %>
+                    <span class="text-warning"><i class="bi bi-clock-fill"></i> Late</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+
+        <div class="print-signature-section">
+          <div class="row mt-5">
+            <div class="col-12 text-center">
+              <div class="signature-line"></div>
+              <p class="mb-0"><strong>Principal's Signature</strong></p>
+              <p class="text-muted">Date</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<div class="card no-print">
+  <div class="card-header">All Attendance Records</div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Reg No</th>
+            <th>Class</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Marked By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% attendance.forEach(function(a) { %>
+            <tr>
+              <td><%= a.student_name %></td>
+              <td><%= a.reg_no %></td>
+              <td><%= a.class_name %><%= a.class_arm ? '-' + a.class_arm : '' %></td>
+              <td><%= a.date %></td>
+              <td>
+                <% if (a.status === 'present') { %>
+                  <span class="badge bg-success">Present</span>
+                <% } else if (a.status === 'absent') { %>
+                  <span class="badge bg-danger">Absent</span>
+                <% } else { %>
+                  <span class="badge bg-warning">Late</span>
+                <% } %>
+              </td>
+              <td><%= a.marked_by_name %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (attendance.length === 0) { %>
+      <p class="text-muted">No attendance records found.</p>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,192 @@
+<h2 class="mb-4">Academic Sessions & Terms</h2>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="row">
+  <div class="col-md-5">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong><i class="bi bi-calendar-range"></i> Current Active</strong>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info mb-0">
+          <div class="mb-1"><strong>Session:</strong> <%= currentSession ? currentSession.name : 'None set' %></div>
+          <div><strong>Term:</strong> <%= currentTerm ? currentTerm.name : 'None set' %></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-plus-circle"></i> Create New Session</div>
+      <div class="card-body">
+        <form method="POST" action="/admin/sessions">
+          <div class="mb-3">
+            <label for="session_name" class="form-label">Session Name</label>
+            <input type="text" class="form-control" id="session_name" name="name" placeholder="e.g. 2025/2026" required pattern="\d{4}/\d{4}">
+            <small class="text-muted">Format: YYYY/YYYY (e.g. 2025/2026)</small>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Create Session</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-plus-circle"></i> Add Term to Current Session</div>
+      <div class="card-body">
+        <% if (currentSession) { %>
+          <form method="POST" action="/admin/terms">
+            <input type="hidden" name="session_id" value="<%= currentSession.id %>">
+            <div class="mb-3">
+              <label for="term_name" class="form-label">Term Name</label>
+              <input type="text" class="form-control" id="term_name" name="name" placeholder="e.g. First Term" required>
+              <small class="text-muted">Adding to session: <strong><%= currentSession.name %></strong></small>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Add Term</button>
+          </form>
+        <% } else { %>
+          <p class="text-muted">Create a session first before adding terms.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-arrow-repeat"></i> Switch Session</div>
+      <div class="card-body">
+        <form method="POST" action="/admin/sessions/switch">
+          <div class="mb-3">
+            <label for="switch_session" class="form-label">Select Session</label>
+            <select class="form-select" id="switch_session" name="session_id" required>
+              <% sessions.forEach(function(s) { %>
+                <option value="<%= s.id %>" <%= currentSession && s.id === currentSession.id ? 'selected' : '' %>>
+                  <%= s.name %> <%= s.is_active ? '(Active)' : '' %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="promote_students" name="promote">
+            <label class="form-check-label" for="promote_students">
+              Promote students to next class (JSS1 &rarr; JSS2, SS2 &rarr; SS3, etc.)
+            </label>
+          </div>
+          <button type="submit" class="btn btn-warning w-100">Switch Session</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-calendar-range"></i> All Sessions</div>
+      <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+          <thead>
+            <tr>
+              <th>Session</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% sessions.forEach(function(s) { %>
+              <tr>
+                <td><strong><%= s.name %></strong></td>
+                <td>
+                  <% if (s.is_active) { %>
+                    <span class="badge bg-success">Active</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Inactive</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (!s.is_active) { %>
+                    <form method="POST" action="/admin/sessions/<%= s.id %>/activate" class="d-inline">
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Activate</button>
+                    </form>
+                    <button class="btn btn-sm btn-outline-danger delete-session-btn" data-id="<%= s.id %>">Delete</button>
+                  <% } else { %>
+                    <span class="text-muted">Current</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (sessions.length === 0) { %>
+          <p class="text-muted text-center py-3">No sessions created yet.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-journal-text"></i> Terms for <%= currentSession ? currentSession.name : 'Current Session' %></div>
+      <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+          <thead>
+            <tr>
+              <th>Term</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% terms.forEach(function(t) { %>
+              <tr>
+                <td><strong><%= t.name %></strong></td>
+                <td>
+                  <% if (t.is_active) { %>
+                    <span class="badge bg-success">Active</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Inactive</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (!t.is_active) { %>
+                    <form method="POST" action="/admin/terms/<%= t.id %>/activate" class="d-inline">
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Activate</button>
+                    </form>
+                    <button class="btn btn-sm btn-outline-danger delete-term-btn" data-id="<%= t.id %>">Delete</button>
+                  <% } else { %>
+                    <span class="text-muted">Current</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (terms.length === 0) { %>
+          <p class="text-muted text-center py-3">No terms for this session.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.delete-session-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Delete this session and all its terms?')) {
+        const res = await fetch('/admin/sessions/' + this.dataset.id, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else showAlert(data.error || 'Failed to delete');
+      }
+    });
+  });
+
+  document.querySelectorAll('.delete-term-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Delete this term?')) {
+        const res = await fetch('/admin/terms/' + this.dataset.id, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else showAlert(data.error || 'Failed to delete');
+      }
+    });
+  });
+</script>

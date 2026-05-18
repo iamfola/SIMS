@@ -1,0 +1,127 @@
+<h2 class="mb-4">My Results</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" action="/student/results" class="row g-3">
+      <div class="col-md-4">
+        <label for="session_id" class="form-label">Session</label>
+        <select class="form-select" id="session_id" name="session_id">
+          <% allSessions.forEach(function(s) { %>
+            <option value="<%= s.id %>" <%= selectedSessionId == s.id ? 'selected' : '' %>><%= s.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="term_id" class="form-label">Term</label>
+        <select class="form-select" id="term_id" name="term_id">
+          <option value="">All Terms</option>
+          <% availableTerms.forEach(function(t) { %>
+            <option value="<%= t.id %>" <%= selectedTermId == t.id ? 'selected' : '' %>><%= t.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary">View Results</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<% if (selectedSession && selectedTerm) { %>
+  <div class="alert alert-info mb-3">
+    <i class="bi bi-calendar3"></i> Showing results for: <strong><%= selectedSession.name %></strong> | <strong><%= selectedTerm.name %></strong>
+  </div>
+<% } else if (selectedSession) { %>
+  <div class="alert alert-info mb-3">
+    <i class="bi bi-calendar3"></i> Showing results for: <strong><%= selectedSession.name %></strong> | All Terms
+  </div>
+<% } %>
+
+<% if (pendingCount > 0) { %>
+  <div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    You have <strong><%= pendingCount %></strong> result(s) pending approval. Only approved results are shown.
+  </div>
+<% } %>
+<div class="card">
+  <div class="card-body">
+    <% if (results.length > 0) { %>
+      <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-primary" onclick="requestResult()" id="requestBtn"><i class="bi bi-envelope"></i> Request Result via Email</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>CA (30)</th>
+              <th>Exam (70)</th>
+              <th>Total</th>
+              <th>Grade</th>
+              <th>Term</th>
+              <th>Session</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% results.forEach(function(r) { %>
+              <tr>
+                <td><strong><%= r.subject_name %></strong></td>
+                <td><%= r.ca_score %></td>
+                <td><%= r.exam_score %></td>
+                <td><strong><%= r.total %></strong></td>
+                <td><span class="badge bg-primary"><%= r.grade %></span></td>
+                <td><%= r.term %></td>
+                <td><%= r.session %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+        <h5 class="mt-3 text-muted">No approved results available</h5>
+        <p class="text-muted">Your results will appear here once your teacher uploads them and the admin approves.</p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+async function requestResult() {
+  const btn = document.getElementById('requestBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+
+  const session_id = document.getElementById('session_id').value;
+  let term_id = document.getElementById('term_id').value;
+  if (!term_id) {
+    const sel = document.getElementById('term_id');
+    for (let i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value) { term_id = sel.options[i].value; break; }
+    }
+  }
+  if (!term_id) {
+    showAlert('No term available. Please contact the admin.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-envelope"></i> Request Result via Email';
+    return;
+  }
+
+  const res = await fetch('/student/request-result', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id, term_id })
+  });
+
+  const data = await res.json();
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-envelope"></i> Request Result via Email';
+
+  if (data.success) {
+    showAlert('Result has been sent to your email.');
+  } else {
+    showAlert(data.message || 'Failed to send result. Make sure you have set up your email in your profile.');
+  }
+}
+</script>
