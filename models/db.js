@@ -974,7 +974,11 @@ async function getEmailSetting(key) {
 }
 
 async function setEmailSetting(key, value) {
-  await run("INSERT OR REPLACE INTO email_settings (key, value) VALUES (?, ?)", [key, value]);
+  if (isPostgres) {
+    await run("INSERT INTO email_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value", [key, value]);
+  } else {
+    await run("INSERT OR REPLACE INTO email_settings (key, value) VALUES (?, ?)", [key, value]);
+  }
 }
 
 const { isEmailConfigured, sendEmail } = require('../utils/email');
