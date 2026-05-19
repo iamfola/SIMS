@@ -33,6 +33,16 @@
   </div>
 </div>
 
+<%
+  var grouped = {};
+  results.forEach(function(r) {
+    var key = r.student_id;
+    if (!grouped[key]) grouped[key] = { student_id: r.student_id, reg_no: r.reg_no, first_name: r.first_name, last_name: r.last_name, middle_name: r.middle_name, class_name: r.class_name, class_arm: r.class_arm, subjects: [] };
+    grouped[key].subjects.push(r);
+  });
+  var studentIds = Object.keys(grouped);
+%>
+
 <% if (results.length === 0) { %>
   <div class="card">
     <div class="card-body text-center text-muted py-5">
@@ -41,51 +51,48 @@
     </div>
   </div>
 <% } else { %>
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span><%= results.length %> result(s) pending approval</span>
-      <div>
-        <button class="btn btn-sm btn-success approve-all-btn d-none" id="approveAllBtn">
-          <i class="bi bi-check-all"></i> Approve Selected (<span id="selectedCount">0</span>)
-        </button>
-        <button class="btn btn-sm btn-success approve-all-page-btn">
-          <i class="bi bi-check-all"></i> Approve All Page
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted"><%= studentIds.length %> student(s) with <%= results.length %> pending result(s)</span>
+    <button class="btn btn-success" id="approveAllStudentsBtn">
+      <i class="bi bi-check-all"></i> Approve All Students
+    </button>
+  </div>
+
+  <% studentIds.forEach(function(key) { %>
+    <% var student = grouped[key]; %>
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <strong><%= student.reg_no %></strong> &mdash;
+          <%= student.first_name %> <%= student.middle_name ? student.middle_name + ' ' : '' %><%= student.last_name %>
+          <span class="badge bg-secondary ms-2"><%= student.class_name %><%= student.class_arm ? ' ' + student.class_arm : '' %></span>
+        </div>
+        <button class="btn btn-sm btn-success approve-student-btn" data-student-id="<%= student.student_id %>">
+          <i class="bi bi-check-all"></i> Approve All (<%= student.subjects.length %>)
         </button>
       </div>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
           <thead class="table-light">
             <tr>
-              <th style="width:40px"><input type="checkbox" id="selectAll"></th>
-              <th>Student</th>
-              <th>Reg No</th>
-              <th>Class</th>
               <th>Subject</th>
               <th>CA</th>
               <th>Exam</th>
               <th>Total</th>
               <th>Grade</th>
               <th>Term</th>
-              <th>Session</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <% results.forEach(function(r) { %>
+            <% student.subjects.forEach(function(r) { %>
               <tr data-result-id="<%= r.id %>">
-                <td><input type="checkbox" class="result-check" value="<%= r.id %>"></td>
-                <td><%= r.first_name %> <%= r.middle_name ? r.middle_name + ' ' : '' %><%= r.last_name %></td>
-                <td><strong><%= r.reg_no %></strong></td>
-                <td><%= r.class_name %><%= r.class_arm ? ' ' + r.class_arm : '' %></td>
                 <td><%= r.subject_name %></td>
                 <td><%= r.ca_score %></td>
                 <td><%= r.exam_score %></td>
                 <td><strong><%= r.total %></strong></td>
                 <td><%= r.grade %></td>
                 <td><%= r.term %></td>
-                <td><%= r.session %></td>
                 <td>
                   <button class="btn btn-sm btn-success approve-btn" data-id="<%= r.id %>">Approve</button>
                   <button class="btn btn-sm btn-danger reject-btn" data-id="<%= r.id %>">Reject</button>
@@ -96,30 +103,10 @@
         </table>
       </div>
     </div>
-  </div>
+  <% }) %>
 <% } %>
 
 <script>
-  function getSelectedIds() {
-    return Array.from(document.querySelectorAll('.result-check:checked')).map(cb => cb.value);
-  }
-  function updateApproveAllBtn() {
-    const ids = getSelectedIds();
-    const btn = document.getElementById('approveAllBtn');
-    if (ids.length > 0) {
-      btn.classList.remove('d-none');
-      document.getElementById('selectedCount').textContent = ids.length;
-    } else {
-      btn.classList.add('d-none');
-    }
-  }
-
-  document.querySelectorAll('.result-check').forEach(cb => cb.addEventListener('change', updateApproveAllBtn));
-  document.getElementById('selectAll').addEventListener('change', function() {
-    document.querySelectorAll('.result-check').forEach(cb => cb.checked = this.checked);
-    updateApproveAllBtn();
-  });
-
   document.querySelectorAll('.approve-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
       if (await showConfirm('Approve this result?')) {
@@ -138,23 +125,21 @@
     });
   });
 
-  document.querySelector('.approve-all-page-btn').addEventListener('click', async function() {
-    const ids = Array.from(document.querySelectorAll('.approve-btn')).map(b => b.dataset.id);
-    if (ids.length === 0) return;
-    if (await showConfirm('Approve all ' + ids.length + ' results on this page?')) {
-      for (const id of ids) {
-        await fetch('/admin/results/' + id + '/approve', { method: 'POST' });
+  document.querySelectorAll('.approve-student-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      if (await showConfirm('Approve all pending results for this student?')) {
+        const res = await fetch('/admin/results/student/' + this.dataset.studentId + '/approve-all', { method: 'POST' });
+        if (res.ok) location.reload();
       }
-      location.reload();
-    }
+    });
   });
 
-  document.getElementById('approveAllBtn').addEventListener('click', async function() {
-    const ids = getSelectedIds();
+  document.getElementById('approveAllStudentsBtn').addEventListener('click', async function() {
+    var ids = <%= JSON.stringify(studentIds.map(Number)) %>;
     if (ids.length === 0) return;
-    if (await showConfirm('Approve ' + ids.length + ' selected results?')) {
-      for (const id of ids) {
-        await fetch('/admin/results/' + id + '/approve', { method: 'POST' });
+    if (await showConfirm('Approve all pending results for ALL ' + ids.length + ' students?')) {
+      for (const sid of ids) {
+        await fetch('/admin/results/student/' + sid + '/approve-all', { method: 'POST' });
       }
       location.reload();
     }
