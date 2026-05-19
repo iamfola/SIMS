@@ -11,7 +11,7 @@ let pool;
 function translateSQL(sql) {
   if (!isPostgres) return sql;
   return sql
-    .replace(/datetime\('now'\)/g, "NOW()")
+    .replace(/datetime\('now'\)/g, "NOW()::text")
     .replace(/'now'/g, "NOW()")
     .replace(/last_insert_rowid\(\)/g, "LASTVAL()")
     .replace(/INTEGER PRIMARY KEY AUTOINCREMENT/g, "SERIAL PRIMARY KEY")
