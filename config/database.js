@@ -47,11 +47,19 @@ async function _runPostgres(sql, params = []) {
   if (isInsert) {
     text += ' RETURNING id';
   }
-  const result = await pool.query(text, params);
-  if (isInsert && result.rows.length > 0) {
-    return result.rows[0].id;
+  try {
+    const result = await pool.query(text, params);
+    if (isInsert && result.rows.length > 0) {
+      return result.rows[0].id;
+    }
+    return result.rowCount || null;
+  } catch (err) {
+    if (isInsert && (err.code === '42703' || (err.message && err.message.includes('does not exist')))) {
+      const result = await pool.query(convertPlaceholders(translateSQL(sql)), params);
+      return result.rowCount || null;
+    }
+    throw err;
   }
-  return result.rowCount || null;
 }
 
 function query(sql, params = []) {
