@@ -42,7 +42,7 @@
       <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
       <div class="stat-number"><%= pendingResults %></div>
       <div class="stat-label">Pending Results</div>
-      <a href="/admin/results" class="stat-link">Review <i class="bi bi-arrow-right"></i></a>
+      <a href="/admin/results/pending" class="stat-link">Review <i class="bi bi-arrow-right"></i></a>
     </div>
   </div>
   <div class="col-md-3 col-6">
@@ -128,7 +128,7 @@
             <div class="activity-icon bg-warning-light"><i class="bi bi-clock-history"></i></div>
             <div class="activity-content">
               <p class="activity-text"><strong><%= pendingResults %></strong> results pending approval</p>
-              <p class="activity-time">Requires your review</p>
+              <p class="activity-time"><a href="/admin/results/pending" class="text-decoration-none">Review pending results</a></p>
             </div>
           </li>
           <li class="activity-item">

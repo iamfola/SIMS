@@ -531,6 +531,24 @@ router.post('/account/update', isAdmin, async (req, res) => {
   }
 });
 
+router.get('/results/pending', isAdmin, async (req, res) => {
+  try {
+    const { session_id, term_id } = req.query;
+    const currentSession = await getCurrentSession();
+    const currentTerm = await getCurrentTerm();
+    const sessions = await getAllSessions();
+    const sid = session_id ? parseInt(session_id) : (currentSession ? currentSession.id : null);
+    const tid = term_id ? parseInt(term_id) : (currentTerm ? currentTerm.id : null);
+    let availableTerms = [];
+    if (sid) availableTerms = await getTermsBySession(sid);
+    const results = await getPendingResults(sid, tid);
+    res.render('admin/pending-results', { results, sessions, currentSession, currentTerm, selectedSessionId: sid, selectedTermId: tid, availableTerms, title: 'Pending Results' });
+  } catch (error) {
+    console.error('Pending results error:', error);
+    res.redirect('/admin/results?error=Failed to load pending results');
+  }
+});
+
 router.get('/results', isAdmin, async (req, res) => {
   const { class_id, student_id, session_id, term_id } = req.query;
 
