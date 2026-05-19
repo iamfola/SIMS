@@ -173,6 +173,22 @@ async function initSchema() {
       )
     `);
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        is_active INTEGER DEFAULT 0
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS terms (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        session_id INTEGER NOT NULL REFERENCES sessions(id),
+        is_active INTEGER DEFAULT 0,
+        UNIQUE(name, session_id)
+      )
+    `);
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS results (
         id SERIAL PRIMARY KEY,
         student_id INTEGER NOT NULL REFERENCES students(id),
@@ -198,22 +214,6 @@ async function initSchema() {
         session_id INTEGER REFERENCES sessions(id),
         term_id INTEGER REFERENCES terms(id),
         UNIQUE(student_id, date)
-      )
-    `);
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS sessions (
-        id SERIAL PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL,
-        is_active INTEGER DEFAULT 0
-      )
-    `);
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS terms (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        session_id INTEGER NOT NULL REFERENCES sessions(id),
-        is_active INTEGER DEFAULT 0,
-        UNIQUE(name, session_id)
       )
     `);
     await pool.query(`
