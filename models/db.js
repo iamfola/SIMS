@@ -1357,22 +1357,85 @@ function resetOTPLockout(userId) {
   run('DELETE FROM otp_lockouts WHERE user_id = ?', [userId]);
 }
 
+function recordFailedLogin(userId) {
+  const user = get('SELECT login_attempts, locked_until FROM users WHERE id = ?', [userId]);
+  if (!user) return { locked: false };
+
+  const now = new Date().toISOString().replace('T', ' ').split('.')[0];
+  const until = user.locked_until;
+
+  if (until && until > now) {
+    const remaining = Math.ceil((new Date(until + 'Z') - new Date()) / 60000);
+    return { locked: true, remaining_minutes: remaining };
+  }
+
+  const attempts = (user.login_attempts || 0) + 1;
+
+  if (attempts >= 5) {
+    const lockedUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0];
+    run("UPDATE users SET login_attempts = 0, locked_until = ? WHERE id = ?", [lockedUntil, userId]);
+    return { locked: true, locked_until: lockedUntil, remaining_minutes: 60 };
+  }
+
+  run("UPDATE users SET login_attempts = ? WHERE id = ?", [attempts, userId]);
+  return { locked: false, remaining: 5 - attempts };
+}
+
+function checkLoginLocked(userId) {
+  const user = get('SELECT login_attempts, locked_until FROM users WHERE id = ?', [userId]);
+  if (!user) return { locked: false };
+
+  const now = new Date().toISOString().replace('T', ' ').split('.')[0];
+  const until = user.locked_until;
+
+  if (until && until > now) {
+    const remaining = Math.ceil((new Date(until + 'Z') - new Date()) / 60000);
+    return { locked: true, locked_until: until, remaining_minutes: remaining };
+  }
+
+  if (until) {
+    run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
+  }
+
+  return { locked: false, attempts: user.login_attempts || 0 };
+}
+
+function resetFailedLogin(userId) {
+  run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
+}
+
 function getLockedUsers() {
+  const now = new Date().toISOString().replace('T', ' ').split('.')[0];
+
   return query(`
-    SELECT o.*, u.username, u.role,
+    SELECT o.user_id, o.lock_level, o.locked_until, u.username, u.role,
            COALESCE(s.first_name, t.first_name, '') as first_name,
-           COALESCE(s.last_name, t.last_name, '') as last_name
+           COALESCE(s.last_name, t.last_name, '') as last_name,
+           'otp' as lock_source
     FROM otp_lockouts o
     JOIN users u ON o.user_id = u.id
     LEFT JOIN students s ON u.id = s.user_id
     LEFT JOIN teachers t ON u.id = t.user_id
     WHERE o.lock_level > 0
-    ORDER BY o.updated_at DESC
-  `);
+
+    UNION ALL
+
+    SELECT u.id as user_id, 1 as lock_level, u.locked_until, u.username, u.role,
+           COALESCE(s.first_name, t.first_name, '') as first_name,
+           COALESCE(s.last_name, t.last_name, '') as last_name,
+           'login' as lock_source
+    FROM users u
+    LEFT JOIN students s ON u.id = s.user_id
+    LEFT JOIN teachers t ON u.id = t.user_id
+    WHERE u.locked_until IS NOT NULL AND u.locked_until > ?
+
+    ORDER BY locked_until DESC
+  `, [now]);
 }
 
-function adminUnlockOTP(userId) {
+function adminUnlockAccount(userId) {
   run('DELETE FROM otp_lockouts WHERE user_id = ?', [userId]);
+  run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
 }
 
 function getSchoolSettings() {
@@ -1415,6 +1478,7 @@ module.exports = {
   getEmailSetting, setEmailSetting,
   sendResultApprovalEmail, sendResultEditEmail, sendAttendanceNotification, sendNewsletter, sendResultPdfEmail, verifyCode,
   getUserWithEmail, getUserWithEmailByRegNo, createPasswordReset, getValidOTP, markOTPUsed,
-  checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, getLockedUsers, adminUnlockOTP,
+  checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, getLockedUsers, adminUnlockAccount,
+  recordFailedLogin, checkLoginLocked, resetFailedLogin,
   getSchoolSettings, updateSchoolSetting, getSchoolSetting,
 };

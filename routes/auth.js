@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
-const { get, getUserByUsername, getUserByRegNo, getUserById, validatePassword, updateUserPassword, getStudentByUserId, getTeacherByUserId, getUserWithEmail, getUserWithEmailByRegNo, createPasswordReset, getValidOTP, markOTPUsed, checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, generatePasscode, getSchoolSettings } = require('../models/db');
+const { get, getUserByUsername, getUserByRegNo, getUserById, validatePassword, updateUserPassword, getStudentByUserId, getTeacherByUserId, getUserWithEmail, getUserWithEmailByRegNo, createPasswordReset, getValidOTP, markOTPUsed, checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, generatePasscode, getSchoolSettings, recordFailedLogin, checkLoginLocked, resetFailedLogin } = require('../models/db');
 const { isAuthenticated } = require('../middleware/auth');
 const { isEmailConfigured, sendEmail } = require('../utils/email');
 
@@ -25,19 +25,31 @@ router.post('/login', async (req, res) => {
       return res.render('login', { error: 'Invalid username or password', title: 'Login' });
     }
 
+    const loginLock = checkLoginLocked(user.id);
+    if (loginLock.locked) {
+      const mins = loginLock.remaining_minutes;
+      return res.render('login', { error: `Account locked due to too many failed attempts. Try again in ${mins} minute${mins === 1 ? '' : 's'}.`, title: 'Login' });
+    }
+
+    const otpLock = checkOTPLockout(user.id);
+    if (otpLock.locked) {
+      if (otpLock.reason === 'permanent') {
+        return res.render('login', { error: 'Account permanently locked due to multiple failed OTP attempts. Contact the admin to unlock.', title: 'Login' });
+      }
+      const until = new Date(otpLock.locked_until + 'Z').toLocaleString();
+      return res.render('login', { error: `Account locked until ${until}.`, title: 'Login' });
+    }
+
     const isValid = await validatePassword(user, password);
     if (!isValid) {
+      const result = recordFailedLogin(user.id);
+      if (result.locked) {
+        return res.render('login', { error: `Too many failed attempts. Account locked for 1 hour.`, title: 'Login' });
+      }
       return res.render('login', { error: 'Invalid username or password', title: 'Login' });
     }
 
-    const lockStatus = checkOTPLockout(user.id);
-    if (lockStatus.locked) {
-      if (lockStatus.reason === 'permanent') {
-        return res.render('login', { error: 'Account permanently locked due to multiple failed OTP attempts. Contact the admin to unlock.', title: 'Login' });
-      }
-      const until = new Date(lockStatus.locked_until + 'Z').toLocaleString();
-      return res.render('login', { error: `Account locked until ${until}.`, title: 'Login' });
-    }
+    resetFailedLogin(user.id);
 
     if (user.role === 'student') {
       const student = getStudentByUserId(user.id);

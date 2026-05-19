@@ -199,6 +199,14 @@ async function initDB() {
   } catch (e) {}
 
   try {
+    db.run(`ALTER TABLE users ADD COLUMN login_attempts INTEGER DEFAULT 0`);
+  } catch (e) {}
+
+  try {
+    db.run(`ALTER TABLE users ADD COLUMN locked_until TEXT`);
+  } catch (e) {}
+
+  try {
     db.run(`ALTER TABLE verifications ADD COLUMN results_hash TEXT`);
   } catch (e) {}
 

@@ -21,7 +21,7 @@ const {
   getPendingResults,
   setEmailSetting, getEmailSetting,
   sendResultApprovalEmail, sendResultEditEmail, sendNewsletter, verifyCode,
-  getLockedUsers, adminUnlockOTP,
+  getLockedUsers, adminUnlockAccount,
   getSchoolSettings, updateSchoolSetting,
 } = require('../models/db');
 const { isAdmin } = require('../middleware/auth');
@@ -806,7 +806,7 @@ router.get('/lockouts', isAdmin, (req, res) => {
 
 router.post('/lockouts/:id/unlock', isAdmin, (req, res) => {
   try {
-    adminUnlockOTP(parseInt(req.params.id));
+    adminUnlockAccount(parseInt(req.params.id));
     res.json({ success: true, message: 'Account unlocked successfully' });
   } catch (error) {
     console.error('Unlock error:', error);

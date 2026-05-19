@@ -25,6 +25,7 @@
               <th>Username</th>
               <th>Name</th>
               <th>Role</th>
+              <th>Source</th>
               <th>Lock Level</th>
               <th>Locked Until</th>
               <th>Status</th>
@@ -37,6 +38,7 @@
                 <td><strong><%= u.username %></strong></td>
                 <td><%= u.first_name %> <%= u.last_name %></td>
                 <td><span class="badge bg-<%= u.role === 'admin' ? 'danger' : u.role === 'teacher' ? 'success' : 'info' %>"><%= u.role %></span></td>
+                <td><span class="badge bg-<%= u.lock_source === 'login' ? 'secondary' : 'dark' %>"><%= u.lock_source === 'login' ? 'Login' : 'OTP' %></span></td>
                 <td>
                   <% if (u.lock_level === 1) { %>
                     <span class="badge bg-warning">1 Hour</span>
@@ -71,10 +73,9 @@
     btn.addEventListener('click', async function() {
       const confirmed = await showConfirm('Unlock this account?');
       if (!confirmed) return;
-      const res = await fetch('/admin/unlock', {
+      const res = await fetch('/admin/lockouts/' + this.dataset.userId + '/unlock', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: this.dataset.userId })
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       if (data.success) {
