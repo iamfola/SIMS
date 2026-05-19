@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-const { query, run, get } = require('../config/database');
+const { query, run, get, isPostgres } = require('../config/database');
 
 const CLASS_PROMOTION_ORDER = {
   'JSS1': 'JSS2', 'JSS2': 'JSS3', 'JSS3': 'SS1',
@@ -1464,7 +1464,11 @@ async function getSchoolSettings() {
 }
 
 async function updateSchoolSetting(key, value) {
-  await run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+  if (isPostgres) {
+    await run('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value', [key, value]);
+  } else {
+    await run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+  }
 }
 
 async function getSchoolSetting(key) {

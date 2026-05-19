@@ -30,18 +30,21 @@ app.use(session({
   },
 }));
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   res.locals.user = req.session ? {
     id: req.session.userId,
     username: req.session.username,
     role: req.session.role,
   } : null;
-  const currentSession = getCurrentSession();
-  const currentTerm = getCurrentTerm();
-  res.locals.currentSession = currentSession;
-  res.locals.currentTerm = currentTerm;
-  const school = getSchoolSettings();
-  res.locals.school = school;
+  try {
+    res.locals.currentSession = await getCurrentSession();
+    res.locals.currentTerm = await getCurrentTerm();
+    res.locals.school = await getSchoolSettings();
+  } catch (e) {
+    res.locals.currentSession = null;
+    res.locals.currentTerm = null;
+    res.locals.school = {};
+  }
   next();
 });
 
