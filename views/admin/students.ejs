@@ -110,6 +110,7 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                       <li><button class="dropdown-item edit-student" data-id="<%= s.id %>" data-first="<%= s.first_name %>" data-middle="<%= s.middle_name || '' %>" data-last="<%= s.last_name %>" data-age="<%= s.age %>" data-class="<%= s.class_id %>" data-email="<%= s.email || '' %>"><i class="bi bi-pencil me-2"></i>Edit</button></li>
                       <li><button class="dropdown-item reset-password-student" data-id="<%= s.id %>" data-name="<%= s.first_name %> <%= s.last_name %>"><i class="bi bi-key me-2"></i>Reset Password</button></li>
+                      <li><button class="dropdown-item regenerate-regno" data-id="<%= s.id %>" data-name="<%= s.first_name %> <%= s.last_name %>"><i class="bi bi-arrow-repeat me-2"></i>Regenerate Reg No</button></li>
                       <li><hr class="dropdown-divider"></li>
                       <li><button class="dropdown-item text-danger delete-student" data-id="<%= s.id %>"><i class="bi bi-trash me-2"></i>Delete</button></li>
                     </ul>
@@ -255,6 +256,22 @@
           location.reload();
         } else {
           showAlert(data.error || 'Failed to reset password');
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll('.regenerate-regno').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const name = this.dataset.name;
+      if (await showConfirm(`Generate a new registration number for ${name}?`)) {
+        const res = await fetch('/admin/students/' + this.dataset.id + '/regenerate-regno', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(`New registration number: ${data.reg_no}`);
+          location.reload();
+        } else {
+          showAlert(data.error || 'Failed to regenerate reg no');
         }
       }
     });

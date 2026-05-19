@@ -387,6 +387,21 @@ router.post('/students/:id/reset-password', isAdmin, async (req, res) => {
   }
 });
 
+router.post('/students/:id/regenerate-regno', isAdmin, async (req, res) => {
+  try {
+    const student = await get('SELECT id FROM students WHERE id = ?', [req.params.id]);
+    if (!student) {
+      return res.status(404).json({ success: false, error: 'Student not found' });
+    }
+    const newRegNo = await generateRegNo();
+    await run('UPDATE students SET reg_no = ? WHERE id = ?', [newRegNo, student.id]);
+    res.json({ success: true, reg_no: newRegNo });
+  } catch (error) {
+    console.error('Regenerate reg_no error:', error);
+    res.status(500).json({ success: false, error: 'Failed to regenerate registration number' });
+  }
+});
+
 router.get('/grading', isAdmin, async (req, res) => {
   const grades = await getGradingSystem();
   res.render('admin/grading', { grades, title: 'Grading System' });
