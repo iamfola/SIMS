@@ -8,19 +8,19 @@ const {
 } = require('../models/db');
 const { isStudent } = require('../middleware/auth');
 
-router.get('/setup-email', isStudent, (req, res) => {
-  const student = getStudentByUserId(req.session.userId);
+router.get('/setup-email', isStudent, async (req, res) => {
+  const student = await getStudentByUserId(req.session.userId);
   res.render('student/setup-email', { student, title: 'Set Up Email', error: req.query.error, success: req.query.success });
 });
 
-router.post('/setup-email', isStudent, (req, res) => {
+router.post('/setup-email', isStudent, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email || !email.includes('@')) {
       return res.redirect('/student/setup-email?error=Please enter a valid email address');
     }
-    const student = getStudentByUserId(req.session.userId);
-    updateStudentEmail(student.id, email);
+    const student = await getStudentByUserId(req.session.userId);
+    await updateStudentEmail(student.id, email);
     res.redirect('/student/dashboard?success=Email saved successfully');
   } catch (error) {
     console.error('Setup email error:', error);
@@ -28,11 +28,11 @@ router.post('/setup-email', isStudent, (req, res) => {
   }
 });
 
-router.get('/dashboard', isStudent, (req, res) => {
+router.get('/dashboard', isStudent, async (req, res) => {
   const db = require('../config/database');
-  const student = getStudentByUserId(req.session.userId);
-  const currentSession = getCurrentSession();
-  const currentTerm = getCurrentTerm();
+  const student = await getStudentByUserId(req.session.userId);
+  const currentSession = await getCurrentSession();
+  const currentTerm = await getCurrentTerm();
 
   if (!student) {
     return res.status(404).render('error', { message: 'Student record not found. Please contact admin.' });
@@ -40,13 +40,13 @@ router.get('/dashboard', isStudent, (req, res) => {
 
   const sessionId = currentSession ? currentSession.id : null;
   const termId = currentTerm ? currentTerm.id : null;
-  const subjects = getStudentSubjects(student.class_id);
+  const subjects = await getStudentSubjects(student.class_id);
 
-  const totalAttendance = db.get('SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND session_id = ? AND term_id = ?', [student.id, sessionId, termId]).count;
-  const presentCount = db.get("SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND status = 'present' AND session_id = ? AND term_id = ?", [student.id, sessionId, termId]).count;
+  const totalAttendance = (await db.get('SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND session_id = ? AND term_id = ?', [student.id, sessionId, termId])).count;
+  const presentCount = (await db.get("SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND status = 'present' AND session_id = ? AND term_id = ?", [student.id, sessionId, termId])).count;
   const attendanceRate = totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0;
 
-  const approvedResults = db.get("SELECT COUNT(*) as count FROM results WHERE student_id = ? AND status = 'approved' AND session_id = ? AND term_id = ?", [student.id, sessionId, termId]).count;
+  const approvedResults = (await db.get("SELECT COUNT(*) as count FROM results WHERE student_id = ? AND status = 'approved' AND session_id = ? AND term_id = ?", [student.id, sessionId, termId])).count;
 
   res.render('student/dashboard', {
     student,
@@ -60,36 +60,36 @@ router.get('/dashboard', isStudent, (req, res) => {
   });
 });
 
-router.get('/profile', isStudent, (req, res) => {
-  const student = getStudentByUserId(req.session.userId);
+router.get('/profile', isStudent, async (req, res) => {
+  const student = await getStudentByUserId(req.session.userId);
   if (!student) {
     return res.status(404).render('error', { message: 'Student record not found. Please contact admin.' });
   }
-  const subjects = getStudentSubjects(student.class_id);
+  const subjects = await getStudentSubjects(student.class_id);
   res.render('student/profile', { student, subjects, title: 'My Profile' });
 });
 
-router.get('/subjects', isStudent, (req, res) => {
-  const student = getStudentByUserId(req.session.userId);
+router.get('/subjects', isStudent, async (req, res) => {
+  const student = await getStudentByUserId(req.session.userId);
   if (!student) {
     return res.status(404).render('error', { message: 'Student record not found. Please contact admin.' });
   }
-  const subjects = getStudentSubjects(student.class_id);
+  const subjects = await getStudentSubjects(student.class_id);
   res.render('student/subjects', { subjects, title: 'My Subjects' });
 });
 
-router.get('/attendance', isStudent, (req, res) => {
-  const student = getStudentByUserId(req.session.userId);
+router.get('/attendance', isStudent, async (req, res) => {
+  const student = await getStudentByUserId(req.session.userId);
   if (!student) {
     return res.status(404).render('error', { message: 'Student record not found. Please contact admin.' });
   }
-  const currentSession = getCurrentSession();
-  const currentTerm = getCurrentTerm();
+  const currentSession = await getCurrentSession();
+  const currentTerm = await getCurrentTerm();
   const sessionId = currentSession ? currentSession.id : null;
   const termId = currentTerm ? currentTerm.id : null;
   let attendance = [];
   if (sessionId && termId) {
-    attendance = query(`
+    attendance = await query(`
       SELECT a.*, u.username as marked_by_name
       FROM attendance a
       JOIN teachers t ON a.marked_by = t.id
@@ -114,13 +114,13 @@ router.get('/attendance', isStudent, (req, res) => {
   });
 });
 
-router.get('/results', isStudent, (req, res) => {
-  const student = getStudentByUserId(req.session.userId);
+router.get('/results', isStudent, async (req, res) => {
+  const student = await getStudentByUserId(req.session.userId);
   if (!student) {
     return res.status(404).render('error', { message: 'Student record not found. Please contact admin.' });
   }
-  const currentSession = getCurrentSession();
-  const currentTerm = getCurrentTerm();
+  const currentSession = await getCurrentSession();
+  const currentTerm = await getCurrentTerm();
   const { session_id, term_id } = req.query;
 
   let sessionId = currentSession ? currentSession.id : null;
@@ -129,17 +129,17 @@ router.get('/results', isStudent, (req, res) => {
   if (session_id) sessionId = parseInt(session_id);
   if (term_id) termId = parseInt(term_id);
 
-  const allSessions = query('SELECT * FROM sessions ORDER BY name DESC');
+  const allSessions = await query('SELECT * FROM sessions ORDER BY name DESC');
   let availableTerms = [];
   if (sessionId) {
-    availableTerms = query('SELECT * FROM terms WHERE session_id = ? ORDER BY name ASC', [sessionId]);
+    availableTerms = await query('SELECT * FROM terms WHERE session_id = ? ORDER BY name ASC', [sessionId]);
   }
 
-  const selectedSession = sessionId ? get('SELECT * FROM sessions WHERE id = ?', [sessionId]) : null;
-  const selectedTerm = termId ? get('SELECT * FROM terms WHERE id = ?', [termId]) : null;
+  const selectedSession = sessionId ? await get('SELECT * FROM sessions WHERE id = ?', [sessionId]) : null;
+  const selectedTerm = termId ? await get('SELECT * FROM terms WHERE id = ?', [termId]) : null;
 
-  const results = getStudentResults(student.id, sessionId || null, termId || null);
-  const pendingCount = getPendingResultCount(student.id, sessionId || null, termId || null);
+  const results = await getStudentResults(student.id, sessionId || null, termId || null);
+  const pendingCount = await getPendingResultCount(student.id, sessionId || null, termId || null);
 
   res.render('student/results', {
     results, pendingCount,
@@ -153,7 +153,7 @@ router.get('/results', isStudent, (req, res) => {
 
 router.post('/request-result', isStudent, async (req, res) => {
   try {
-    const student = getStudentByUserId(req.session.userId);
+    const student = await getStudentByUserId(req.session.userId);
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }

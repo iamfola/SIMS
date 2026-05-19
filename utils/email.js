@@ -2,14 +2,14 @@ const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const { get } = require('../config/database');
 
-function getEmailConfig() {
-  const provider = get("SELECT value FROM email_settings WHERE key = 'email_provider'");
-  const host = get("SELECT value FROM email_settings WHERE key = 'smtp_host'");
-  const port = get("SELECT value FROM email_settings WHERE key = 'smtp_port'");
-  const user = get("SELECT value FROM email_settings WHERE key = 'smtp_user'");
-  const pass = get("SELECT value FROM email_settings WHERE key = 'smtp_pass'");
-  const fromName = get("SELECT value FROM email_settings WHERE key = 'from_name'");
-  const sgKey = get("SELECT value FROM email_settings WHERE key = 'sendgrid_api_key'");
+async function getEmailConfig() {
+  const provider = await get("SELECT value FROM email_settings WHERE key = 'email_provider'");
+  const host = await get("SELECT value FROM email_settings WHERE key = 'smtp_host'");
+  const port = await get("SELECT value FROM email_settings WHERE key = 'smtp_port'");
+  const user = await get("SELECT value FROM email_settings WHERE key = 'smtp_user'");
+  const pass = await get("SELECT value FROM email_settings WHERE key = 'smtp_pass'");
+  const fromName = await get("SELECT value FROM email_settings WHERE key = 'from_name'");
+  const sgKey = await get("SELECT value FROM email_settings WHERE key = 'sendgrid_api_key'");
 
   return {
     provider: provider ? provider.value : 'smtp',
@@ -22,8 +22,8 @@ function getEmailConfig() {
   };
 }
 
-function isEmailConfigured() {
-  const config = getEmailConfig();
+async function isEmailConfigured() {
+  const config = await getEmailConfig();
   if (config.provider === 'sendgrid') {
     return !!config.sendgridApiKey;
   }
@@ -31,9 +31,9 @@ function isEmailConfigured() {
 }
 
 async function sendEmail(to, subject, html) {
-  const config = getEmailConfig();
+  const config = await getEmailConfig();
 
-  if (!isEmailConfigured()) {
+  if (!await isEmailConfigured()) {
     console.error('[Email] Not configured. Cannot send email.');
     return false;
   }

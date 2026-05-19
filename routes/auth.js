@@ -15,23 +15,23 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    let user = getUserByUsername(username);
+    let user = await getUserByUsername(username);
 
     if (!user) {
-      user = getUserByRegNo(username);
+      user = await getUserByRegNo(username);
     }
 
     if (!user) {
       return res.render('login', { error: 'Invalid username or password', title: 'Login' });
     }
 
-    const loginLock = checkLoginLocked(user.id);
+    const loginLock = await checkLoginLocked(user.id);
     if (loginLock.locked) {
       const mins = loginLock.remaining_minutes;
       return res.render('login', { error: `Account locked due to too many failed attempts. Try again in ${mins} minute${mins === 1 ? '' : 's'}.`, title: 'Login' });
     }
 
-    const otpLock = checkOTPLockout(user.id);
+    const otpLock = await checkOTPLockout(user.id);
     if (otpLock.locked) {
       if (otpLock.reason === 'permanent') {
         return res.render('login', { error: 'Account permanently locked due to multiple failed OTP attempts. Contact the admin to unlock.', title: 'Login' });
@@ -42,24 +42,24 @@ router.post('/login', async (req, res) => {
 
     const isValid = await validatePassword(user, password);
     if (!isValid) {
-      const result = recordFailedLogin(user.id);
+      const result = await recordFailedLogin(user.id);
       if (result.locked) {
         return res.render('login', { error: `Too many failed attempts. Account locked for 1 hour.`, title: 'Login' });
       }
       return res.render('login', { error: 'Invalid username or password', title: 'Login' });
     }
 
-    resetFailedLogin(user.id);
+    await resetFailedLogin(user.id);
 
     if (user.role === 'student') {
-      const student = getStudentByUserId(user.id);
+      const student = await getStudentByUserId(user.id);
       if (!student) {
         return res.render('login', { error: 'Student record not found. Please contact admin.', title: 'Login' });
       }
     }
 
     if (user.role === 'teacher') {
-      const teacher = getTeacherByUserId(user.id);
+      const teacher = await getTeacherByUserId(user.id);
       if (!teacher) {
         return res.render('login', { error: 'Teacher record not found. Please contact admin.', title: 'Login' });
       }
@@ -74,7 +74,7 @@ router.post('/login', async (req, res) => {
     }
 
     if (user.role === 'student') {
-      const student = getStudentByUserId(user.id);
+      const student = await getStudentByUserId(user.id);
       if (student && (!student.email || student.email.trim() === '')) {
         return res.redirect('/student/setup-email');
       }
@@ -103,7 +103,7 @@ router.post('/change-password', isAuthenticated, async (req, res) => {
       return res.render('change-password', { error: 'Password must be at least 6 characters', mustChange: true, title: 'Change Password' });
     }
 
-    const user = getUserByUsername(req.session.username);
+    const user = await getUserByUsername(req.session.username);
 
     if (!user.must_change_password) {
       const isValid = await validatePassword(user, currentPassword);
@@ -112,7 +112,7 @@ router.post('/change-password', isAuthenticated, async (req, res) => {
       }
     }
 
-    updateUserPassword(user.id, newPassword);
+    await updateUserPassword(user.id, newPassword);
 
     res.redirect('/dashboard');
   } catch (error) {
@@ -127,7 +127,7 @@ router.get('/logout', (req, res) => {
   });
 });
 
-router.get('/admin/verify-login', (req, res) => {
+router.get('/admin/verify-login', async (req, res) => {
   if (!req.session.pendingAdmin) {
     return res.redirect('/login');
   }
@@ -189,7 +189,7 @@ router.post('/admin/verify-login', async (req, res) => {
     });
   }
 
-  const user = getUserById(pending.userId);
+  const user = await getUserById(pending.userId);
   if (!user) {
     delete req.session.pendingAdmin;
     return res.redirect('/login?error=User not found.');
@@ -211,12 +211,12 @@ router.get('/admin/resend-code', async (req, res) => {
     return res.redirect('/login');
   }
   const pending = req.session.pendingAdmin;
-  const passcode = generatePasscode();
+  const passcode = await generatePasscode();
   pending.passcode = passcode;
   pending.expiresAt = Date.now() + 10 * 60 * 1000;
   pending.attempts = 0;
 
-  const school = getSchoolSettings();
+  const school = await getSchoolSettings();
   const schoolName = school.school_name || 'SIMS';
   const subject = `Admin Verification Code - ${schoolName}`;
   const html = `
@@ -267,9 +267,9 @@ router.post('/forgot-password', async (req, res) => {
       return res.render('forgot-password', { error: 'Enter your username', success: null, title: 'Forgot Password' });
     }
 
-    let user = getUserWithEmail(username);
+    let user = await getUserWithEmail(username);
     if (!user) {
-      user = getUserWithEmailByRegNo(username);
+      user = await getUserWithEmailByRegNo(username);
     }
     if (!user) {
       return res.render('forgot-password', { error: 'Username or Reg No not found', success: null, title: 'Forgot Password' });
@@ -282,7 +282,7 @@ router.post('/forgot-password', async (req, res) => {
       });
     }
 
-    const lockStatus = checkOTPLockout(user.id);
+    const lockStatus = await checkOTPLockout(user.id);
     if (lockStatus.locked) {
       if (lockStatus.reason === 'permanent') {
         return res.render('forgot-password', {
@@ -297,7 +297,7 @@ router.post('/forgot-password', async (req, res) => {
       });
     }
 
-    if (!isEmailConfigured()) {
+    if (!(await isEmailConfigured())) {
       return res.render('forgot-password', {
         error: 'Email system is not configured. Please contact the admin.',
         success: null, title: 'Forgot Password'
@@ -305,12 +305,12 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     const isAdmin = user.role === 'admin';
-    const passcode = isAdmin ? generatePasscode() : String(Math.floor(100000 + Math.random() * 900000));
+    const passcode = isAdmin ? await generatePasscode() : String(Math.floor(100000 + Math.random() * 900000));
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0];
 
-    createPasswordReset(user.id, passcode, expiresAt);
+    await createPasswordReset(user.id, passcode, expiresAt);
 
-    const school = getSchoolSettings();
+    const school = await getSchoolSettings();
     const schoolName = school.school_name || 'SIMS';
     const subject = `Password Reset Code - ${schoolName}`;
     const codeDisplay = isAdmin ? passcode : passcode.split('').join(' ');
@@ -396,15 +396,15 @@ router.post('/enter-passcode', async (req, res) => {
     return res.redirect('/forgot-password?error=Too many failed attempts. Request a new passcode.');
   }
 
-  const user = getUserById(pending.userId);
+  const user = await getUserById(pending.userId);
   if (!user) {
     delete req.session.pendingPasscodeReset;
     return res.redirect('/forgot-password?error=User not found.');
   }
 
-  const validReset = getValidOTP(user.id, code.trim());
+  const validReset = await getValidOTP(user.id, code.trim());
   if (!validReset) {
-    const result = recordFailedOTPAttempt(user.id);
+    const result = await recordFailedOTPAttempt(user.id);
     if (result.locked) {
       delete req.session.pendingPasscodeReset;
       if (result.reason === 'permanent') {
@@ -423,8 +423,8 @@ router.post('/enter-passcode', async (req, res) => {
     });
   }
 
-  resetOTPLockout(user.id);
-  markOTPUsed(validReset.id);
+  await resetOTPLockout(user.id);
+  await markOTPUsed(validReset.id);
   const username = pending.username;
   const userId = user.id;
   delete req.session.pendingPasscodeReset;
@@ -439,12 +439,12 @@ router.get('/resend-passcode', async (req, res) => {
   const pending = req.session.pendingPasscodeReset;
 
   const isWords = pending.codeType === 'words';
-  const passcode = isWords ? generatePasscode() : String(Math.floor(100000 + Math.random() * 900000));
+  const passcode = isWords ? await generatePasscode() : String(Math.floor(100000 + Math.random() * 900000));
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0];
-  createPasswordReset(pending.userId, passcode, expiresAt);
+  await createPasswordReset(pending.userId, passcode, expiresAt);
   pending.attempts = 0;
 
-  const school = getSchoolSettings();
+  const school = await getSchoolSettings();
   const schoolName = school.school_name || 'SIMS';
   const subject = `Password Reset Code - ${schoolName}`;
   const codeDisplay = isWords ? passcode : passcode.split('').join(' ');
@@ -521,15 +521,15 @@ router.post('/reset-password', async (req, res) => {
       return res.redirect('/forgot-password');
     }
 
-    let user = getUserByUsername(username);
+    let user = await getUserByUsername(username);
     if (!user) {
-      user = getUserByRegNo(username);
+      user = await getUserByRegNo(username);
     }
     if (!user) {
       return res.render('reset-password', { username, error: 'User not found', title: 'Reset Password' });
     }
 
-    const lockStatus = checkOTPLockout(user.id);
+    const lockStatus = await checkOTPLockout(user.id);
     if (lockStatus.locked) {
       if (lockStatus.reason === 'permanent') {
         return res.render('reset-password', {
@@ -542,7 +542,7 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    resetOTPLockout(user.id);
+    await resetOTPLockout(user.id);
     await updateUserPassword(user.id, newPassword);
 
     delete req.session.passcodeVerified;

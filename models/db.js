@@ -229,25 +229,25 @@ function generatePasscode() {
   return selected.join('-');
 }
 
-function getUserByUsername(username) {
-  return get('SELECT * FROM users WHERE username = ?', [username]);
+async function getUserByUsername(username) {
+  return await get('SELECT * FROM users WHERE username = ?', [username]);
 }
 
-function getUserByRegNo(regNo) {
-  return get(`
+async function getUserByRegNo(regNo) {
+  return await get(`
     SELECT u.* FROM users u
     JOIN students s ON u.id = s.user_id
     WHERE s.reg_no = ?
   `, [regNo]);
 }
 
-function getUserById(id) {
-  return get('SELECT * FROM users WHERE id = ?', [id]);
+async function getUserById(id) {
+  return await get('SELECT * FROM users WHERE id = ?', [id]);
 }
 
 async function createUser(username, password, role, mustChangePassword = true) {
   const hashed = await bcrypt.hash(password, 10);
-  return run('INSERT INTO users (username, password, role, must_change_password) VALUES (?, ?, ?, ?)',
+  return await run('INSERT INTO users (username, password, role, must_change_password) VALUES (?, ?, ?, ?)',
     [username, hashed, role, mustChangePassword ? 1 : 0]);
 }
 
@@ -255,21 +255,21 @@ async function createStudentWithUser(username, password, firstName, middleName, 
   const hashed = await bcrypt.hash(password, 10);
 
   try {
-    run('INSERT INTO users (username, password, role, must_change_password) VALUES (?, ?, ?, ?)',
+    await run('INSERT INTO users (username, password, role, must_change_password) VALUES (?, ?, ?, ?)',
       [username, hashed, 'student', 1]);
 
-    const user = get('SELECT id FROM users WHERE username = ?', [username]);
+    const user = await get('SELECT id FROM users WHERE username = ?', [username]);
     if (!user) {
       throw new Error('Failed to create user');
     }
     const userId = user.id;
 
     try {
-      run('INSERT INTO students (user_id, first_name, middle_name, last_name, age, class_id, reg_no, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      await run('INSERT INTO students (user_id, first_name, middle_name, last_name, age, class_id, reg_no, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [userId, firstName, middleName || null, lastName, age, classId, regNo, email]);
       return userId;
     } catch (error) {
-      run('DELETE FROM users WHERE id = ?', [userId]);
+      await run('DELETE FROM users WHERE id = ?', [userId]);
       throw new Error('Failed to create student record: ' + error.message);
     }
   } catch (error) {
@@ -284,20 +284,20 @@ async function createTeacherWithUser(username, password, firstName, middleName, 
   const hashed = await bcrypt.hash(password, 10);
 
   try {
-    run('INSERT INTO users (username, password, role, must_change_password) VALUES (?, ?, ?, ?)',
+    await run('INSERT INTO users (username, password, role, must_change_password) VALUES (?, ?, ?, ?)',
       [username, hashed, 'teacher', 1]);
 
-    const user = get('SELECT id FROM users WHERE username = ?', [username]);
+    const user = await get('SELECT id FROM users WHERE username = ?', [username]);
     if (!user) {
       throw new Error('Failed to create user');
     }
     const userId = user.id;
 
     try {
-      run('INSERT INTO teachers (user_id, first_name, middle_name, last_name, class_id) VALUES (?, ?, ?, ?, ?)', [userId, firstName, middleName || null, lastName, classId]);
+      await run('INSERT INTO teachers (user_id, first_name, middle_name, last_name, class_id) VALUES (?, ?, ?, ?, ?)', [userId, firstName, middleName || null, lastName, classId]);
       return userId;
     } catch (error) {
-      run('DELETE FROM users WHERE id = ?', [userId]);
+      await run('DELETE FROM users WHERE id = ?', [userId]);
       throw new Error('Failed to create teacher record: ' + error.message);
     }
   } catch (error) {
@@ -310,43 +310,43 @@ async function createTeacherWithUser(username, password, firstName, middleName, 
 
 async function updateUserPassword(userId, password) {
   const hashed = await bcrypt.hash(password, 10);
-  run('UPDATE users SET password = ?, must_change_password = 0 WHERE id = ?', [hashed, userId]);
+  await run('UPDATE users SET password = ?, must_change_password = 0 WHERE id = ?', [hashed, userId]);
 }
 
 async function resetUserPassword(userId) {
   const hashed = await bcrypt.hash('12345678', 10);
-  run('UPDATE users SET password = ?, must_change_password = 1 WHERE id = ?', [hashed, userId]);
+  await run('UPDATE users SET password = ?, must_change_password = 1 WHERE id = ?', [hashed, userId]);
 }
 
 function validatePassword(user, password) {
   return bcrypt.compare(password, user.password);
 }
 
-function createStudent(userId, firstName, middleName, lastName, age, classId, regNo) {
-  return run('INSERT INTO students (user_id, first_name, middle_name, last_name, age, class_id, reg_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
+async function createStudent(userId, firstName, middleName, lastName, age, classId, regNo) {
+  return await run('INSERT INTO students (user_id, first_name, middle_name, last_name, age, class_id, reg_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [userId, firstName, middleName || null, lastName, age, classId, regNo]);
 }
 
-function createTeacher(userId, firstName, middleName, lastName, classId = null) {
-  return run('INSERT INTO teachers (user_id, first_name, middle_name, last_name, class_id) VALUES (?, ?, ?, ?, ?)', [userId, firstName, middleName || null, lastName, classId]);
+async function createTeacher(userId, firstName, middleName, lastName, classId = null) {
+  return await run('INSERT INTO teachers (user_id, first_name, middle_name, last_name, class_id) VALUES (?, ?, ?, ?, ?)', [userId, firstName, middleName || null, lastName, classId]);
 }
 
-function getStudentByUserId(userId) {
-  return get('SELECT s.*, c.name as class_name, c.arm as class_arm, u.username FROM students s JOIN classes c ON s.class_id = c.id JOIN users u ON s.user_id = u.id WHERE s.user_id = ?', [userId]);
+async function getStudentByUserId(userId) {
+  return await get('SELECT s.*, c.name as class_name, c.arm as class_arm, u.username FROM students s JOIN classes c ON s.class_id = c.id JOIN users u ON s.user_id = u.id WHERE s.user_id = ?', [userId]);
 }
 
-function getStudentById(studentId) {
-  return get('SELECT s.*, c.name as class_name, c.arm as class_arm, u.username FROM students s JOIN classes c ON s.class_id = c.id JOIN users u ON s.user_id = u.id WHERE s.id = ?', [studentId]);
+async function getStudentById(studentId) {
+  return await get('SELECT s.*, c.name as class_name, c.arm as class_arm, u.username FROM students s JOIN classes c ON s.class_id = c.id JOIN users u ON s.user_id = u.id WHERE s.id = ?', [studentId]);
 }
 
-function getTeacherByUserId(userId) {
-  return get('SELECT t.*, u.username, c.name as class_name, c.arm as class_arm FROM teachers t JOIN users u ON t.user_id = u.id LEFT JOIN classes c ON t.class_id = c.id WHERE t.user_id = ?', [userId]);
+async function getTeacherByUserId(userId) {
+  return await get('SELECT t.*, u.username, c.name as class_name, c.arm as class_arm FROM teachers t JOIN users u ON t.user_id = u.id LEFT JOIN classes c ON t.class_id = c.id WHERE t.user_id = ?', [userId]);
 }
 
-function generateRegNo() {
+async function generateRegNo() {
   const year = String(new Date().getFullYear()).slice(-2);
   const prefix = `${year}/`;
-  const last = get("SELECT reg_no FROM students WHERE reg_no LIKE ? ORDER BY id DESC LIMIT 1", [prefix + '%']);
+  const last = await get("SELECT reg_no FROM students WHERE reg_no LIKE ? ORDER BY id DESC LIMIT 1", [prefix + '%']);
   let num = 1;
   if (last) {
     const parts = last.reg_no.split('/');
@@ -355,28 +355,28 @@ function generateRegNo() {
   return prefix + String(num).padStart(4, '0');
 }
 
-function getAllClasses() {
-  return query('SELECT * FROM classes ORDER BY name, arm');
+async function getAllClasses() {
+  return await query('SELECT * FROM classes ORDER BY name, arm');
 }
 
-function createClass(name, arm) {
-  return run('INSERT INTO classes (name, arm) VALUES (?, ?)', [name, arm]);
+async function createClass(name, arm) {
+  return await run('INSERT INTO classes (name, arm) VALUES (?, ?)', [name, arm]);
 }
 
-function deleteClass(id) {
-  return run('DELETE FROM classes WHERE id = ?', [id]);
+async function deleteClass(id) {
+  return await run('DELETE FROM classes WHERE id = ?', [id]);
 }
 
-function getAllSubjects() {
-  return query('SELECT * FROM subjects ORDER BY name');
+async function getAllSubjects() {
+  return await query('SELECT * FROM subjects ORDER BY name');
 }
 
-function createSubject(name) {
-  return run('INSERT INTO subjects (name) VALUES (?)', [name]);
+async function createSubject(name) {
+  return await run('INSERT INTO subjects (name) VALUES (?)', [name]);
 }
 
-function getClassSubjects() {
-  return query(`
+async function getClassSubjects() {
+  return await query(`
     SELECT cs.id, c.name as class_name, c.arm as class_arm, c.id as class_id,
            s.name as subject_name, s.id as subject_id,
            t.id as teacher_id, t.first_name || ' ' || COALESCE(t.middle_name || ' ', '') || t.last_name as teacher_name
@@ -388,13 +388,13 @@ function getClassSubjects() {
   `);
 }
 
-function assignClassSubject(classId, subjectId, teacherId) {
-  return run('INSERT INTO class_subjects (class_id, subject_id, teacher_id) VALUES (?, ?, ?)',
+async function assignClassSubject(classId, subjectId, teacherId) {
+  return await run('INSERT INTO class_subjects (class_id, subject_id, teacher_id) VALUES (?, ?, ?)',
     [classId, subjectId, teacherId || null]);
 }
 
-function getAllTeachers() {
-  return query(`
+async function getAllTeachers() {
+  return await query(`
     SELECT t.*, u.username, u.must_change_password, c.name as class_name, c.arm as class_arm,
            CASE WHEN o.lock_level = 3 THEN 1 WHEN o.locked_until > datetime('now') THEN 1 ELSE 0 END as is_locked,
            o.lock_level
@@ -406,8 +406,8 @@ function getAllTeachers() {
   `);
 }
 
-function getAllStudents() {
-  return query(`
+async function getAllStudents() {
+  return await query(`
     SELECT s.id, s.reg_no, s.first_name, s.middle_name, s.last_name, s.age, s.class_id, s.email,
            c.name as class_name, c.arm as class_arm, u.username, u.must_change_password,
            CASE WHEN o.lock_level = 3 THEN 1 WHEN o.locked_until > datetime('now') THEN 1 ELSE 0 END as is_locked,
@@ -420,54 +420,54 @@ function getAllStudents() {
   `);
 }
 
-function deleteStudent(id) {
-  const student = get('SELECT user_id FROM students WHERE id = ?', [id]);
+async function deleteStudent(id) {
+  const student = await get('SELECT user_id FROM students WHERE id = ?', [id]);
   if (student) {
-    run('DELETE FROM students WHERE id = ?', [id]);
-    run('DELETE FROM users WHERE id = ?', [student.user_id]);
+    await run('DELETE FROM students WHERE id = ?', [id]);
+    await run('DELETE FROM users WHERE id = ?', [student.user_id]);
   }
 }
 
-function updateTeacherClass(teacherId, classId) {
-  return run('UPDATE teachers SET class_id = ? WHERE id = ?', [classId, teacherId]);
+async function updateTeacherClass(teacherId, classId) {
+  return await run('UPDATE teachers SET class_id = ? WHERE id = ?', [classId, teacherId]);
 }
 
-function updateStudent(id, firstName, middleName, lastName, age, classId) {
-  const student = get('SELECT s.class_id FROM students s WHERE s.id = ?', [id]);
+async function updateStudent(id, firstName, middleName, lastName, age, classId) {
+  const student = await get('SELECT s.class_id FROM students s WHERE s.id = ?', [id]);
   if (!student) throw new Error('Student not found');
 
-  run('UPDATE students SET first_name = ?, middle_name = ?, last_name = ?, age = ?, class_id = ? WHERE id = ?',
+  await run('UPDATE students SET first_name = ?, middle_name = ?, last_name = ?, age = ?, class_id = ? WHERE id = ?',
     [firstName, middleName || null, lastName, age, classId, id]);
 }
 
-function updateTeacher(id, firstName, middleName, lastName, classId) {
-  run('UPDATE teachers SET first_name = ?, middle_name = ?, last_name = ?, class_id = ? WHERE id = ?',
+async function updateTeacher(id, firstName, middleName, lastName, classId) {
+  await run('UPDATE teachers SET first_name = ?, middle_name = ?, last_name = ?, class_id = ? WHERE id = ?',
     [firstName, middleName || null, lastName, classId || null, id]);
 }
 
-function deleteTeacher(id) {
-  const teacher = get('SELECT user_id FROM teachers WHERE id = ?', [id]);
+async function deleteTeacher(id) {
+  const teacher = await get('SELECT user_id FROM teachers WHERE id = ?', [id]);
   if (teacher) {
-    run('DELETE FROM teachers WHERE id = ?', [id]);
-    run('DELETE FROM users WHERE id = ?', [teacher.user_id]);
+    await run('DELETE FROM teachers WHERE id = ?', [id]);
+    await run('DELETE FROM users WHERE id = ?', [teacher.user_id]);
   }
 }
 
-function getGradingSystem() {
-  return query('SELECT * FROM grading_system ORDER BY min_score DESC');
+async function getGradingSystem() {
+  return await query('SELECT * FROM grading_system ORDER BY min_score DESC');
 }
 
-function addGrade(grade, minScore, maxScore, remark) {
-  return run('INSERT INTO grading_system (grade, min_score, max_score, remark) VALUES (?, ?, ?, ?)',
+async function addGrade(grade, minScore, maxScore, remark) {
+  return await run('INSERT INTO grading_system (grade, min_score, max_score, remark) VALUES (?, ?, ?, ?)',
     [grade, minScore, maxScore, remark]);
 }
 
-function deleteGrade(id) {
-  return run('DELETE FROM grading_system WHERE id = ?', [id]);
+async function deleteGrade(id) {
+  return await run('DELETE FROM grading_system WHERE id = ?', [id]);
 }
 
-function calculateGrade(total) {
-  const grades = getGradingSystem();
+async function calculateGrade(total) {
+  const grades = await getGradingSystem();
   for (const g of grades) {
     if (total >= g.min_score && total <= g.max_score) {
       return g.grade;
@@ -476,8 +476,8 @@ function calculateGrade(total) {
   return 'F';
 }
 
-function getResultsForTeacher(teacherId, sessionId = null, termId = null) {
-  const teacher = get('SELECT class_id FROM teachers WHERE id = ?', [teacherId]);
+async function getResultsForTeacher(teacherId, sessionId = null, termId = null) {
+  const teacher = await get('SELECT class_id FROM teachers WHERE id = ?', [teacherId]);
 
   let sql = `
     SELECT r.*, s.reg_no, s.first_name, s.last_name, s.middle_name, s.class_id, c.name as class_name, c.arm as class_arm,
@@ -508,10 +508,10 @@ function getResultsForTeacher(teacherId, sessionId = null, termId = null) {
     params.push(termId, termId);
   }
 
-  return query(sql + ` ORDER BY r.id DESC`, params);
+  return await query(sql + ` ORDER BY r.id DESC`, params);
 }
 
-function getPendingResults(sessionId = null, termId = null) {
+async function getPendingResults(sessionId = null, termId = null) {
   let sql = `
     SELECT r.*, s.reg_no, s.first_name, s.last_name, s.middle_name, c.name as class_name, c.arm as class_arm,
            sub.name as subject_name, u.username as student_username
@@ -533,10 +533,10 @@ function getPendingResults(sessionId = null, termId = null) {
     params.push(termId, termId);
   }
 
-  return query(sql + ` ORDER BY r.id DESC`, params);
+  return await query(sql + ` ORDER BY r.id DESC`, params);
 }
 
-function getAllResults(sessionId = null, termId = null) {
+async function getAllResults(sessionId = null, termId = null) {
   let sql = `
     SELECT r.*, s.reg_no, s.first_name, s.last_name, s.middle_name, c.name as class_name, c.arm as class_arm,
            sub.name as subject_name, u.username as student_username
@@ -558,35 +558,35 @@ function getAllResults(sessionId = null, termId = null) {
     params.push(termId, termId);
   }
 
-  return query(sql + ` ORDER BY r.id DESC`, params);
+  return await query(sql + ` ORDER BY r.id DESC`, params);
 }
 
-function upsertResult(studentId, subjectId, caScore, examScore, total, grade, status, term, session, sessionId = null, termId = null) {
-  run(`INSERT OR REPLACE INTO results (student_id, subject_id, ca_score, exam_score, total, grade, status, term, session, session_id, term_id)
+async function upsertResult(studentId, subjectId, caScore, examScore, total, grade, status, term, session, sessionId = null, termId = null) {
+  await run(`INSERT OR REPLACE INTO results (student_id, subject_id, ca_score, exam_score, total, grade, status, term, session, session_id, term_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [studentId, subjectId, caScore, examScore, total, grade, status, term, session, sessionId, termId]);
 }
 
-function approveResult(id) {
-  return run("UPDATE results SET status = 'approved' WHERE id = ?", [id]);
+async function approveResult(id) {
+  return await run("UPDATE results SET status = 'approved' WHERE id = ?", [id]);
 }
 
-function rejectResult(id) {
-  return run("UPDATE results SET status = 'rejected' WHERE id = ?", [id]);
+async function rejectResult(id) {
+  return await run("UPDATE results SET status = 'rejected' WHERE id = ?", [id]);
 }
 
-function getStudentsByClassId(classId, teacherId = null) {
+async function getStudentsByClassId(classId, teacherId = null) {
   let params = [classId];
   let teacherFilter = '';
 
   if (teacherId) {
-    const teacher = get('SELECT class_id FROM teachers WHERE id = ?', [teacherId]);
+    const teacher = await get('SELECT class_id FROM teachers WHERE id = ?', [teacherId]);
     if (teacher && teacher.class_id) {
       teacherFilter = ` AND s.class_id = ?`;
       params = [teacher.class_id];
     }
   }
 
-  return query(`
+  return await query(`
     SELECT s.*, u.username
     FROM students s
     JOIN users u ON s.user_id = u.id
@@ -595,15 +595,15 @@ function getStudentsByClassId(classId, teacherId = null) {
   `, params);
 }
 
-function upsertAttendance(studentId, date, status, markedBy, sessionId = null, termId = null) {
-  run(`INSERT INTO attendance (student_id, date, status, marked_by, session_id, term_id)
+async function upsertAttendance(studentId, date, status, markedBy, sessionId = null, termId = null) {
+  await run(`INSERT INTO attendance (student_id, date, status, marked_by, session_id, term_id)
        VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(student_id, date) DO UPDATE SET status = ?, marked_by = ?, session_id = ?, term_id = ?`,
     [studentId, date, status, markedBy, sessionId, termId, status, markedBy, sessionId, termId]);
 }
 
-function getAttendanceByTeacher(teacherId) {
-  return query(`
+async function getAttendanceByTeacher(teacherId) {
+  return await query(`
     SELECT a.*, s.reg_no, s.first_name, s.last_name, s.middle_name, c.name as class_name, c.arm as class_arm,
            u.username as marked_by_name
     FROM attendance a
@@ -616,8 +616,8 @@ function getAttendanceByTeacher(teacherId) {
   `, [teacherId]);
 }
 
-function getStudentAttendance(studentId) {
-  return query(`
+async function getStudentAttendance(studentId) {
+  return await query(`
     SELECT a.*, u.username as marked_by_name
     FROM attendance a
     JOIN teachers t ON a.marked_by = t.id
@@ -627,7 +627,7 @@ function getStudentAttendance(studentId) {
   `, [studentId]);
 }
 
-function getAllAttendance(date, classId, sessionId = null, termId = null) {
+async function getAllAttendance(date, classId, sessionId = null, termId = null) {
   let sql = `
     SELECT a.*, s.reg_no, s.first_name, s.last_name, s.middle_name,
            s.first_name || ' ' || COALESCE(s.middle_name || ' ', '') || s.last_name as student_name,
@@ -660,10 +660,10 @@ function getAllAttendance(date, classId, sessionId = null, termId = null) {
   }
 
   sql += ' ORDER BY a.date DESC';
-  return query(sql, params);
+  return await query(sql, params);
 }
 
-function getStudentResults(studentId, sessionId = null, termId = null) {
+async function getStudentResults(studentId, sessionId = null, termId = null) {
   let sql = `
     SELECT r.*, sub.name as subject_name
     FROM results r
@@ -681,10 +681,10 @@ function getStudentResults(studentId, sessionId = null, termId = null) {
     params.push(termId, termId);
   }
 
-  return query(sql + ` ORDER BY r.session DESC, r.term DESC`, params);
+  return await query(sql + ` ORDER BY r.session DESC, r.term DESC`, params);
 }
 
-function getPendingResultCount(studentId, sessionId = null, termId = null) {
+async function getPendingResultCount(studentId, sessionId = null, termId = null) {
   let sql = `SELECT COUNT(*) as count FROM results WHERE student_id = ? AND status = 'pending'`;
   const params = [studentId];
 
@@ -697,12 +697,12 @@ function getPendingResultCount(studentId, sessionId = null, termId = null) {
     params.push(termId, termId);
   }
 
-  const result = get(sql, params);
+  const result = await get(sql, params);
   return result ? result.count : 0;
 }
 
-function getTeacherAssignedSubjects(teacherId) {
-  const teacher = get('SELECT class_id FROM teachers WHERE id = ?', [teacherId]);
+async function getTeacherAssignedSubjects(teacherId) {
+  const teacher = await get('SELECT class_id FROM teachers WHERE id = ?', [teacherId]);
 
   let params = [teacherId];
   let classFilter = '';
@@ -719,11 +719,11 @@ function getTeacherAssignedSubjects(teacherId) {
     WHERE cs.teacher_id = ? ${classFilter}
     ORDER BY c.name, c.arm, s.name`;
 
-  return query(sql, params);
+  return await query(sql, params);
 }
 
-function getStudentSubjects(classId) {
-  return query(`
+async function getStudentSubjects(classId) {
+  return await query(`
     SELECT cs.id, c.name as class_name, c.arm as class_arm,
            s.name as subject_name, s.id as subject_id,
            t.id as teacher_id, t.first_name || ' ' || COALESCE(t.middle_name || ' ', '') || t.last_name as teacher_name
@@ -736,8 +736,8 @@ function getStudentSubjects(classId) {
   `, [classId]);
 }
 
-function getClassSubjectById(id) {
-  return query(`
+async function getClassSubjectById(id) {
+  return await query(`
     SELECT cs.*, c.name as class_name, c.arm as class_arm, c.id as class_id,
            s.name as subject_name, s.id as subject_id
     FROM class_subjects cs
@@ -747,16 +747,16 @@ function getClassSubjectById(id) {
   `, [id]);
 }
 
-function getTodayAttendanceForClass(classId, date) {
-  return query(`
+async function getTodayAttendanceForClass(classId, date) {
+  return await query(`
     SELECT student_id, status
     FROM attendance
     WHERE date = ? AND student_id IN (SELECT id FROM students WHERE class_id = ?)
   `, [date, classId]);
 }
 
-function getAttendanceDatesForClass(classId) {
-  return query(`
+async function getAttendanceDatesForClass(classId) {
+  return await query(`
     SELECT DISTINCT date
     FROM attendance
     WHERE student_id IN (SELECT id FROM students WHERE class_id = ?)
@@ -764,8 +764,8 @@ function getAttendanceDatesForClass(classId) {
   `, [classId]);
 }
 
-function getAttendanceForDate(classId, date) {
-  return query(`
+async function getAttendanceForDate(classId, date) {
+  return await query(`
     SELECT a.student_id, s.reg_no, s.first_name, s.middle_name, s.last_name,
            s.first_name || ' ' || COALESCE(s.middle_name || ' ', '') || s.last_name as student_name,
            a.date, a.status, u.username as marked_by_name
@@ -779,13 +779,13 @@ function getAttendanceForDate(classId, date) {
 }
 
 async function seedDefaultData() {
-  const adminExists = get('SELECT id FROM users WHERE username = ?', ['admin']);
+  const adminExists = await get('SELECT id FROM users WHERE username = ?', ['admin']);
   if (!adminExists) {
     await createUser('admin', 'admin123', 'admin', false);
     console.log('Default admin created: username=admin, password=admin123');
   }
 
-  const gradesExist = get('SELECT id FROM grading_system LIMIT 1');
+  const gradesExist = await get('SELECT id FROM grading_system LIMIT 1');
   if (!gradesExist) {
     const grades = [
       { grade: 'A', min_score: 70, max_score: 100, remark: 'Excellent' },
@@ -795,23 +795,25 @@ async function seedDefaultData() {
       { grade: 'E', min_score: 40, max_score: 44, remark: 'Fair' },
       { grade: 'F', min_score: 0, max_score: 39, remark: 'Fail' },
     ];
-    grades.forEach(g => addGrade(g.grade, g.min_score, g.max_score, g.remark));
+    for (const g of grades) {
+      await addGrade(g.grade, g.min_score, g.max_score, g.remark);
+    }
     console.log('Default grading system created');
   }
 
-  const classesExist = get('SELECT id FROM classes LIMIT 1');
+  const classesExist = await get('SELECT id FROM classes LIMIT 1');
   if (!classesExist) {
     const levels = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
     const arms = ['A', 'B', 'C'];
     for (const level of levels) {
       for (const arm of arms) {
-        createClass(level, arm);
+        await createClass(level, arm);
       }
     }
     console.log('Default classes created');
   }
 
-  const subjectsExist = get('SELECT id FROM subjects LIMIT 1');
+  const subjectsExist = await get('SELECT id FROM subjects LIMIT 1');
   if (!subjectsExist) {
     const subjectNames = [
       'Mathematics', 'English Language', 'Basic Science', 'Physics',
@@ -821,112 +823,114 @@ async function seedDefaultData() {
       'Computer Studies', 'Business Studies',
       'Yoruba', 'Igbo', 'Hausa', 'French',
     ];
-    subjectNames.forEach(name => createSubject(name));
+    for (const name of subjectNames) {
+      await createSubject(name);
+    }
     console.log('Default subjects created');
   }
 
-  const sessionExists = get('SELECT id FROM sessions LIMIT 1');
+  const sessionExists = await get('SELECT id FROM sessions LIMIT 1');
   if (!sessionExists) {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
     const sessionName = month >= 9 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
-    const currentSessionId = run('INSERT INTO sessions (name, is_active) VALUES (?, 1)', [sessionName]);
+    const currentSessionId = await run('INSERT INTO sessions (name, is_active) VALUES (?, 1)', [sessionName]);
     const termNames = ['First Term', 'Second Term', 'Third Term'];
     for (let i = 0; i < termNames.length; i++) {
-      run('INSERT INTO terms (name, session_id, is_active) VALUES (?, ?, ?)',
+      await run('INSERT INTO terms (name, session_id, is_active) VALUES (?, ?, ?)',
         [termNames[i], currentSessionId, i === 0 ? 1 : 0]);
     }
     console.log('Default session and terms created');
   }
 
-  const settingExists = get("SELECT key FROM settings WHERE key = 'current_session_id'");
+  const settingExists = await get("SELECT key FROM settings WHERE key = 'current_session_id'");
   if (!settingExists) {
-    const activeSession = get('SELECT id FROM sessions WHERE is_active = 1 LIMIT 1');
+    const activeSession = await get('SELECT id FROM sessions WHERE is_active = 1 LIMIT 1');
     if (activeSession) {
-      run("INSERT INTO settings (key, value) VALUES ('current_session_id', ?)", [String(activeSession.id)]);
-      const activeTerm = get('SELECT id FROM terms WHERE is_active = 1 LIMIT 1');
+      await run("INSERT INTO settings (key, value) VALUES ('current_session_id', ?)", [String(activeSession.id)]);
+      const activeTerm = await get('SELECT id FROM terms WHERE is_active = 1 LIMIT 1');
       if (activeTerm) {
-        run("INSERT INTO settings (key, value) VALUES ('current_term_id', ?)", [String(activeTerm.id)]);
+        await run("INSERT INTO settings (key, value) VALUES ('current_term_id', ?)", [String(activeTerm.id)]);
       }
     }
   }
 }
 
-function getCurrentSession() {
-  const setting = get("SELECT value FROM settings WHERE key = 'current_session_id'");
+async function getCurrentSession() {
+  const setting = await get("SELECT value FROM settings WHERE key = 'current_session_id'");
   if (!setting) return null;
-  return get('SELECT * FROM sessions WHERE id = ?', [parseInt(setting.value)]);
+  return await get('SELECT * FROM sessions WHERE id = ?', [parseInt(setting.value)]);
 }
 
-function getCurrentTerm() {
-  const setting = get("SELECT value FROM settings WHERE key = 'current_term_id'");
+async function getCurrentTerm() {
+  const setting = await get("SELECT value FROM settings WHERE key = 'current_term_id'");
   if (!setting) return null;
-  return get('SELECT * FROM terms WHERE id = ?', [parseInt(setting.value)]);
+  return await get('SELECT * FROM terms WHERE id = ?', [parseInt(setting.value)]);
 }
 
-function getAllSessions() {
-  return query('SELECT * FROM sessions ORDER BY name DESC');
+async function getAllSessions() {
+  return await query('SELECT * FROM sessions ORDER BY name DESC');
 }
 
-function createSession(name) {
-  return run('INSERT INTO sessions (name, is_active) VALUES (?, 0)', [name]);
+async function createSession(name) {
+  return await run('INSERT INTO sessions (name, is_active) VALUES (?, 0)', [name]);
 }
 
-function deleteSession(id) {
-  const isActive = get('SELECT is_active FROM sessions WHERE id = ?', [id]);
+async function deleteSession(id) {
+  const isActive = await get('SELECT is_active FROM sessions WHERE id = ?', [id]);
   if (isActive && isActive.is_active) return null;
-  run('DELETE FROM terms WHERE session_id = ?', [id]);
-  return run('DELETE FROM sessions WHERE id = ?', [id]);
+  await run('DELETE FROM terms WHERE session_id = ?', [id]);
+  return await run('DELETE FROM sessions WHERE id = ?', [id]);
 }
 
-function setActiveSession(id) {
-  run('UPDATE sessions SET is_active = 0 WHERE 1=1');
-  run('UPDATE sessions SET is_active = 1 WHERE id = ?', [id]);
-  run("UPDATE settings SET value = ? WHERE key = 'current_session_id'", [String(id)]);
+async function setActiveSession(id) {
+  await run('UPDATE sessions SET is_active = 0 WHERE 1=1');
+  await run('UPDATE sessions SET is_active = 1 WHERE id = ?', [id]);
+  await run("UPDATE settings SET value = ? WHERE key = 'current_session_id'", [String(id)]);
 
-  const firstTerm = get('SELECT id FROM terms WHERE session_id = ? ORDER BY name ASC LIMIT 1', [id]);
+  const firstTerm = await get('SELECT id FROM terms WHERE session_id = ? ORDER BY name ASC LIMIT 1', [id]);
   if (firstTerm) {
-    setActiveTerm(firstTerm.id);
+    await setActiveTerm(firstTerm.id);
   }
 }
 
-function getTermsBySession(sessionId) {
-  return query('SELECT * FROM terms WHERE session_id = ? ORDER BY name ASC', [sessionId]);
+async function getTermsBySession(sessionId) {
+  return await query('SELECT * FROM terms WHERE session_id = ? ORDER BY name ASC', [sessionId]);
 }
 
-function createTerm(name, sessionId) {
-  return run('INSERT INTO terms (name, session_id, is_active) VALUES (?, ?, 0)', [name, sessionId]);
+async function createTerm(name, sessionId) {
+  return await run('INSERT INTO terms (name, session_id, is_active) VALUES (?, ?, 0)', [name, sessionId]);
 }
 
-function deleteTerm(id) {
-  const isActive = get('SELECT is_active FROM terms WHERE id = ?', [id]);
+async function deleteTerm(id) {
+  const isActive = await get('SELECT is_active FROM terms WHERE id = ?', [id]);
   if (isActive && isActive.is_active) return null;
-  return run('DELETE FROM terms WHERE id = ?', [id]);
+  return await run('DELETE FROM terms WHERE id = ?', [id]);
 }
 
-function setActiveTerm(id) {
-  const term = get('SELECT * FROM terms WHERE id = ?', [id]);
+async function setActiveTerm(id) {
+  const term = await get('SELECT * FROM terms WHERE id = ?', [id]);
   if (!term) {
     throw new Error('Term not found');
   }
   
-  const currentSessionSetting = get("SELECT value FROM settings WHERE key = 'current_session_id'");
+  const currentSessionSetting = await get("SELECT value FROM settings WHERE key = 'current_session_id'");
   const currentSessionId = currentSessionSetting ? parseInt(currentSessionSetting.value) : null;
   
   if (currentSessionId !== null && term.session_id !== currentSessionId) {
-    const termSession = get('SELECT name FROM sessions WHERE id = ?', [term.session_id]);
-    const currentSession = get('SELECT name FROM sessions WHERE id = ?', [currentSessionId]);
+    const termSession = await get('SELECT name FROM sessions WHERE id = ?', [term.session_id]);
+    const currentSession = await get('SELECT name FROM sessions WHERE id = ?', [currentSessionId]);
     throw new Error(`Cannot activate "${term.name}" from session "${termSession?.name || 'Unknown'}" when current session is "${currentSession?.name || 'Unknown'}"`);
   }
   
-  run('UPDATE terms SET is_active = 0 WHERE 1=1');
-  run('UPDATE terms SET is_active = 1 WHERE id = ?', [id]);
-  run("UPDATE settings SET value = ? WHERE key = 'current_term_id'", [String(id)]);
+  await run('UPDATE terms SET is_active = 0 WHERE 1=1');
+  await run('UPDATE terms SET is_active = 1 WHERE id = ?', [id]);
+  await run("UPDATE settings SET value = ? WHERE key = 'current_term_id'", [String(id)]);
 }
 
-function promoteStudents() {
-  const students = query('SELECT s.*, c.name as class_name FROM students s JOIN classes c ON s.class_id = c.id');
+async function promoteStudents() {
+  const students = await query('SELECT s.*, c.name as class_name FROM students s JOIN classes c ON s.class_id = c.id');
   let promotedCount = 0;
   let noPromotionCount = 0;
 
@@ -940,14 +944,14 @@ function promoteStudents() {
       continue;
     }
 
-    const nextClassObj = get('SELECT id FROM classes WHERE name = ?', [nextClass]);
+    const nextClassObj = await get('SELECT id FROM classes WHERE name = ?', [nextClass]);
     if (!nextClassObj) {
       console.log(`[Promotion] Skipping ${student.first_name} ${student.last_name} - next class ${nextClass} not found in database`);
       noPromotionCount++;
       continue;
     }
 
-    run('UPDATE students SET class_id = ? WHERE id = ?', [nextClassObj.id, student.id]);
+    await run('UPDATE students SET class_id = ? WHERE id = ?', [nextClassObj.id, student.id]);
     console.log(`[Promotion] ${student.first_name} ${student.last_name}: ${student.class_name} -> ${nextClass}`);
     promotedCount++;
   }
@@ -956,21 +960,21 @@ function promoteStudents() {
   return { promotedCount, noPromotionCount };
 }
 
-function updateStudentEmail(studentId, email) {
-  return run('UPDATE students SET email = ? WHERE id = ?', [email, studentId]);
+async function updateStudentEmail(studentId, email) {
+  return await run('UPDATE students SET email = ? WHERE id = ?', [email, studentId]);
 }
 
-function getStudentsWithoutEmail() {
-  return query("SELECT s.*, u.username FROM students s JOIN users u ON s.user_id = u.id WHERE s.email IS NULL OR s.email = ''");
+async function getStudentsWithoutEmail() {
+  return await query("SELECT s.*, u.username FROM students s JOIN users u ON s.user_id = u.id WHERE s.email IS NULL OR s.email = ''");
 }
 
-function getEmailSetting(key) {
-  const row = get("SELECT value FROM email_settings WHERE key = ?", [key]);
+async function getEmailSetting(key) {
+  const row = await get("SELECT value FROM email_settings WHERE key = ?", [key]);
   return row ? row.value : null;
 }
 
-function setEmailSetting(key, value) {
-  run("INSERT OR REPLACE INTO email_settings (key, value) VALUES (?, ?)", [key, value]);
+async function setEmailSetting(key, value) {
+  await run("INSERT OR REPLACE INTO email_settings (key, value) VALUES (?, ?)", [key, value]);
 }
 
 const { isEmailConfigured, sendEmail } = require('../utils/email');
@@ -982,24 +986,25 @@ async function sendResultApprovalEmail(studentId) {
     return false;
   }
 
-  const student = query(`
+  const studentRows = await query(`
     SELECT s.email, s.first_name, s.last_name, c.name as class_name, c.arm as class_arm,
            u.username
     FROM students s
     JOIN classes c ON s.class_id = c.id
     JOIN users u ON s.user_id = u.id
     WHERE s.id = ?
-  `, [studentId])[0];
+  `, [studentId]);
+  const student = studentRows[0];
 
   if (!student || !student.email) {
     console.log(`[Email] Student ${studentId} has no email, skipping`);
     return false;
   }
 
-  const school = getSchoolSettings();
+  const school = await getSchoolSettings();
   const schoolName = school.school_name || 'SIMS';
-  const currentSession = getCurrentSession();
-  const currentTerm = getCurrentTerm();
+  const currentSession = await getCurrentSession();
+  const currentTerm = await getCurrentTerm();
   const sessionName = currentSession ? currentSession.name : 'N/A';
   const termName = currentTerm ? currentTerm.name : 'N/A';
 
@@ -1024,7 +1029,7 @@ async function sendResultEditEmail(resultId) {
     return false;
   }
 
-  const result = query(`
+  const resultRows = await query(`
     SELECT r.*, s.email, s.first_name, s.last_name, s.middle_name,
            c.name as class_name, c.arm as class_arm,
            sub.name as subject_name, u.username
@@ -1034,14 +1039,15 @@ async function sendResultEditEmail(resultId) {
     JOIN subjects sub ON r.subject_id = sub.id
     JOIN users u ON s.user_id = u.id
     WHERE r.id = ?
-  `, [resultId])[0];
+  `, [resultId]);
+  const result = resultRows[0];
 
   if (!result || !result.email) {
     console.log(`[Email] Result ${resultId} has no student email, skipping`);
     return false;
   }
 
-  const school = getSchoolSettings();
+  const school = await getSchoolSettings();
   const schoolName = school.school_name || 'SIMS';
   const subject = `Your result has been updated - ${schoolName}`;
   const html = `
@@ -1071,19 +1077,20 @@ async function sendAttendanceNotification(studentId, status, date, termName, ses
     return false;
   }
 
-  const student = query(`
+  const studentRows = await query(`
     SELECT s.email, s.first_name, s.last_name, c.name as class_name, c.arm as class_arm
     FROM students s
     JOIN classes c ON s.class_id = c.id
     WHERE s.id = ?
-  `, [studentId])[0];
+  `, [studentId]);
+  const student = studentRows[0];
 
   if (!student || !student.email) {
     console.log(`[Email] Student ${studentId} has no email, skipping`);
     return false;
   }
 
-  const school = getSchoolSettings();
+  const school = await getSchoolSettings();
   const schoolName = school.school_name || 'SIMS';
   const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-NG', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -1116,12 +1123,12 @@ async function sendNewsletter(subject, htmlBody, filter = {}) {
 
   let students;
   if (filter.class_id) {
-    students = query("SELECT s.id, s.email, s.first_name, s.last_name FROM students s WHERE s.class_id = ? AND s.email IS NOT NULL AND s.email != ''", [filter.class_id]);
+    students = await query("SELECT s.id, s.email, s.first_name, s.last_name FROM students s WHERE s.class_id = ? AND s.email IS NOT NULL AND s.email != ''", [filter.class_id]);
   } else if (filter.student_ids && filter.student_ids.length > 0) {
     const placeholders = filter.student_ids.map(() => '?').join(',');
-    students = query(`SELECT id, email, first_name, last_name FROM students WHERE id IN (${placeholders}) AND email IS NOT NULL AND email != ''`, filter.student_ids);
+    students = await query(`SELECT id, email, first_name, last_name FROM students WHERE id IN (${placeholders}) AND email IS NOT NULL AND email != ''`, filter.student_ids);
   } else {
-    students = query("SELECT id, email, first_name, last_name FROM students WHERE email IS NOT NULL AND email != ''");
+    students = await query("SELECT id, email, first_name, last_name FROM students WHERE email IS NOT NULL AND email != ''");
   }
 
   let sent = 0, failed = 0;
@@ -1148,15 +1155,15 @@ async function sendResultPdfEmail(studentId, sessionId, termId) {
     return { success: false, message: 'Email not configured' };
   }
 
-  const student = getStudentById(studentId);
+  const student = await getStudentById(studentId);
   if (!student) return { success: false, message: 'Student not found' };
   if (!student.email) return { success: false, message: 'No email address on file' };
 
-  const session = get('SELECT * FROM sessions WHERE id = ?', [sessionId]);
-  const term = get('SELECT * FROM terms WHERE id = ?', [termId]);
+  const session = await get('SELECT * FROM sessions WHERE id = ?', [sessionId]);
+  const term = await get('SELECT * FROM terms WHERE id = ?', [termId]);
   if (!session || !term) return { success: false, message: 'Session or term not found' };
 
-  const results = query(`
+  const results = await query(`
     SELECT r.*, sub.name as subject_name
     FROM results r
     JOIN subjects sub ON r.subject_id = sub.id
@@ -1169,11 +1176,13 @@ async function sendResultPdfEmail(studentId, sessionId, termId) {
   const totalScore = results.reduce((sum, r) => sum + r.total, 0);
   const avgScore = results.length > 0 ? (totalScore / results.length).toFixed(2) : 0;
 
-  const totalAttendance = get('SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND session_id = ? AND term_id = ?', [studentId, sessionId, termId]).count;
-  const presentCount = get("SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND status = 'present' AND session_id = ? AND term_id = ?", [studentId, sessionId, termId]).count;
+  const totalAttendanceRow = await get('SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND session_id = ? AND term_id = ?', [studentId, sessionId, termId]);
+  const totalAttendance = totalAttendanceRow.count;
+  const presentCountRow = await get("SELECT COUNT(*) as count FROM attendance WHERE student_id = ? AND status = 'present' AND session_id = ? AND term_id = ?", [studentId, sessionId, termId]);
+  const presentCount = presentCountRow.count;
   const attendanceRate = totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0;
 
-  const classRankData = query(`
+  const classRankData = await query(`
     SELECT s.id, SUM(r.total) as total_score
     FROM students s
     JOIN results r ON s.id = r.student_id
@@ -1191,8 +1200,8 @@ async function sendResultPdfEmail(studentId, sessionId, termId) {
     }
   }
 
-  const grades = getGradingSystem();
-  const school = getSchoolSettings();
+  const grades = await getGradingSystem();
+  const school = await getSchoolSettings();
     const schoolName = school.school_name || 'SIMS';
     const shortName = school.school_short_name || 'SIMS';
 
@@ -1201,31 +1210,37 @@ async function sendResultPdfEmail(studentId, sessionId, termId) {
   while (codeExists) {
     const num = String(Math.floor(Math.random() * 9999)).padStart(4, '0');
     verificationCode = `${shortName}-${new Date().getFullYear()}-${num}`;
-    codeExists = !!get('SELECT id FROM verifications WHERE code = ?', [verificationCode]);
+    codeExists = !!(await get('SELECT id FROM verifications WHERE code = ?', [verificationCode]));
   }
 
   const hash = crypto.createHash('sha256').update(results.map(r => `${r.subject_id}:${r.ca_score}:${r.exam_score}:${r.total}:${r.grade}`).join('|')).digest('hex');
 
-  run('INSERT INTO verifications (code, student_id, session_id, term_id, results_hash) VALUES (?, ?, ?, ?, ?)',
+  await run('INSERT INTO verifications (code, student_id, session_id, term_id, results_hash) VALUES (?, ?, ?, ?, ?)',
     [verificationCode, studentId, sessionId, termId, hash]);
 
   const pdfBuffer = await generateResultPdf(student, session, term, results, grades, avgScore, attendanceRate, classPosition, classRankData.length, verificationCode, school);
 
   const fileName = `${student.reg_no}_${term.name.replace(/\s+/g, '_')}_${session.name.replace('/', '_')}.pdf`.replace(/[^a-zA-Z0-9_.-]/g, '_');
 
+  const smtpHost = await getEmailSetting('smtp_host');
+  const smtpPort = await getEmailSetting('smtp_port');
+  const smtpUser = await getEmailSetting('smtp_user');
+  const smtpPass = await getEmailSetting('smtp_pass');
+  const fromName = await getEmailSetting('from_name');
+
   const transporter = nodemailer.createTransport({
-    host: getEmailSetting('smtp_host'),
-    port: parseInt(getEmailSetting('smtp_port') || '587'),
-    secure: parseInt(getEmailSetting('smtp_port') || '587') === 465,
+    host: smtpHost,
+    port: parseInt(smtpPort || '587'),
+    secure: parseInt(smtpPort || '587') === 465,
     auth: {
-      user: getEmailSetting('smtp_user'),
-      pass: getEmailSetting('smtp_pass'),
+      user: smtpUser,
+      pass: smtpPass,
     },
   });
 
   try {
     await transporter.sendMail({
-      from: `"${getEmailSetting('from_name') || schoolName}" <${getEmailSetting('smtp_user')}>`,
+      from: `"${fromName || schoolName}" <${smtpUser}>`,
       to: student.email,
       subject: `Your Result - ${term.name}, ${session.name}`,
       html: `<p>Dear ${student.first_name},</p><p>Please find your result attached.</p><p>Regards,<br>${schoolName}</p>`,
@@ -1239,15 +1254,15 @@ async function sendResultPdfEmail(studentId, sessionId, termId) {
   }
 }
 
-function verifyCode(code) {
-  const v = get('SELECT * FROM verifications WHERE code = ?', [code]);
+async function verifyCode(code) {
+  const v = await get('SELECT * FROM verifications WHERE code = ?', [code]);
   if (!v) return null;
 
-  const student = getStudentById(v.student_id);
-  const session = get('SELECT * FROM sessions WHERE id = ?', [v.session_id]);
-  const term = get('SELECT * FROM terms WHERE id = ?', [v.term_id]);
+  const student = await getStudentById(v.student_id);
+  const session = await get('SELECT * FROM sessions WHERE id = ?', [v.session_id]);
+  const term = await get('SELECT * FROM terms WHERE id = ?', [v.term_id]);
 
-  const results = query(`
+  const results = await query(`
     SELECT r.*, sub.name as subject_name
     FROM results r
     JOIN subjects sub ON r.subject_id = sub.id
@@ -1264,8 +1279,8 @@ function verifyCode(code) {
   return { verification: v, student, session, term, results, tampered };
 }
 
-function getUserWithEmail(username) {
-  return get(`
+async function getUserWithEmail(username) {
+  return await get(`
     SELECT u.*, COALESCE(s.email, u.email) as email
     FROM users u
     LEFT JOIN students s ON u.id = s.user_id
@@ -1273,8 +1288,8 @@ function getUserWithEmail(username) {
   `, [username]);
 }
 
-function getUserWithEmailByRegNo(regNo) {
-  return get(`
+async function getUserWithEmailByRegNo(regNo) {
+  return await get(`
     SELECT u.*, s.email
     FROM users u
     JOIN students s ON u.id = s.user_id
@@ -1282,25 +1297,25 @@ function getUserWithEmailByRegNo(regNo) {
   `, [regNo]);
 }
 
-function createPasswordReset(userId, otp, expiresAt) {
-  return run('INSERT INTO password_resets (user_id, otp, expires_at) VALUES (?, ?, ?)',
+async function createPasswordReset(userId, otp, expiresAt) {
+  return await run('INSERT INTO password_resets (user_id, otp, expires_at) VALUES (?, ?, ?)',
     [userId, otp, expiresAt]);
 }
 
-function getValidOTP(userId, otp) {
-  return get(`
+async function getValidOTP(userId, otp) {
+  return await get(`
     SELECT * FROM password_resets
     WHERE user_id = ? AND otp = ? AND used = 0 AND expires_at > datetime('now')
     ORDER BY created_at DESC LIMIT 1
   `, [userId, otp]);
 }
 
-function markOTPUsed(id) {
-  run('UPDATE password_resets SET used = 1 WHERE id = ?', [id]);
+async function markOTPUsed(id) {
+  await run('UPDATE password_resets SET used = 1 WHERE id = ?', [id]);
 }
 
-function checkOTPLockout(userId) {
-  const lockout = get('SELECT * FROM otp_lockouts WHERE user_id = ?', [userId]);
+async function checkOTPLockout(userId) {
+  const lockout = await get('SELECT * FROM otp_lockouts WHERE user_id = ?', [userId]);
   if (!lockout) return { locked: false };
 
   if (lockout.lock_level === 3) {
@@ -1312,17 +1327,17 @@ function checkOTPLockout(userId) {
     if (lockout.locked_until > now) {
       return { locked: true, reason: 'temporary', lock_level: lockout.lock_level, locked_until: lockout.locked_until };
     }
-    run("UPDATE otp_lockouts SET locked_until = NULL, updated_at = datetime('now') WHERE user_id = ?", [userId]);
+    await run("UPDATE otp_lockouts SET locked_until = NULL, updated_at = datetime('now') WHERE user_id = ?", [userId]);
   }
 
   return { locked: false, failed_attempts: lockout.failed_attempts, lock_level: lockout.lock_level };
 }
 
-function recordFailedOTPAttempt(userId) {
-  let lockout = get('SELECT * FROM otp_lockouts WHERE user_id = ?', [userId]);
+async function recordFailedOTPAttempt(userId) {
+  let lockout = await get('SELECT * FROM otp_lockouts WHERE user_id = ?', [userId]);
 
   if (!lockout) {
-    run('INSERT INTO otp_lockouts (user_id, failed_attempts) VALUES (?, 1)', [userId]);
+    await run('INSERT INTO otp_lockouts (user_id, failed_attempts) VALUES (?, 1)', [userId]);
     return { locked: false };
   }
 
@@ -1334,31 +1349,31 @@ function recordFailedOTPAttempt(userId) {
 
     if (nextLevel >= 3) {
       lockedUntil = null;
-      run("UPDATE otp_lockouts SET failed_attempts = 0, lock_level = 3, locked_until = NULL, updated_at = datetime('now') WHERE user_id = ?", [userId]);
+      await run("UPDATE otp_lockouts SET failed_attempts = 0, lock_level = 3, locked_until = NULL, updated_at = datetime('now') WHERE user_id = ?", [userId]);
       return { locked: true, reason: 'permanent', lock_level: 3 };
     }
 
     const durMs = nextLevel === 1 ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
     lockedUntil = new Date(Date.now() + durMs).toISOString().replace('T', ' ').split('.')[0];
 
-    run('UPDATE otp_lockouts SET failed_attempts = 0, lock_level = ?, locked_until = ?, updated_at = datetime(\'now\') WHERE user_id = ?',
+    await run('UPDATE otp_lockouts SET failed_attempts = 0, lock_level = ?, locked_until = ?, updated_at = datetime(\'now\') WHERE user_id = ?',
       [nextLevel, lockedUntil, userId]);
 
     const durLabel = nextLevel === 1 ? '1 hour' : '1 day';
     return { locked: true, reason: 'temporary', lock_level: nextLevel, locked_until: lockedUntil, duration: durLabel };
   }
 
-  run('UPDATE otp_lockouts SET failed_attempts = ?, updated_at = datetime(\'now\') WHERE user_id = ?',
+  await run('UPDATE otp_lockouts SET failed_attempts = ?, updated_at = datetime(\'now\') WHERE user_id = ?',
     [newAttempts, userId]);
   return { locked: false, remaining: 3 - newAttempts };
 }
 
-function resetOTPLockout(userId) {
-  run('DELETE FROM otp_lockouts WHERE user_id = ?', [userId]);
+async function resetOTPLockout(userId) {
+  await run('DELETE FROM otp_lockouts WHERE user_id = ?', [userId]);
 }
 
-function recordFailedLogin(userId) {
-  const user = get('SELECT login_attempts, locked_until FROM users WHERE id = ?', [userId]);
+async function recordFailedLogin(userId) {
+  const user = await get('SELECT login_attempts, locked_until FROM users WHERE id = ?', [userId]);
   if (!user) return { locked: false };
 
   const now = new Date().toISOString().replace('T', ' ').split('.')[0];
@@ -1373,16 +1388,16 @@ function recordFailedLogin(userId) {
 
   if (attempts >= 5) {
     const lockedUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString().replace('T', ' ').split('.')[0];
-    run("UPDATE users SET login_attempts = 0, locked_until = ? WHERE id = ?", [lockedUntil, userId]);
+    await run("UPDATE users SET login_attempts = 0, locked_until = ? WHERE id = ?", [lockedUntil, userId]);
     return { locked: true, locked_until: lockedUntil, remaining_minutes: 60 };
   }
 
-  run("UPDATE users SET login_attempts = ? WHERE id = ?", [attempts, userId]);
+  await run("UPDATE users SET login_attempts = ? WHERE id = ?", [attempts, userId]);
   return { locked: false, remaining: 5 - attempts };
 }
 
-function checkLoginLocked(userId) {
-  const user = get('SELECT login_attempts, locked_until FROM users WHERE id = ?', [userId]);
+async function checkLoginLocked(userId) {
+  const user = await get('SELECT login_attempts, locked_until FROM users WHERE id = ?', [userId]);
   if (!user) return { locked: false };
 
   const now = new Date().toISOString().replace('T', ' ').split('.')[0];
@@ -1394,20 +1409,20 @@ function checkLoginLocked(userId) {
   }
 
   if (until) {
-    run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
+    await run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
   }
 
   return { locked: false, attempts: user.login_attempts || 0 };
 }
 
-function resetFailedLogin(userId) {
-  run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
+async function resetFailedLogin(userId) {
+  await run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
 }
 
-function getLockedUsers() {
+async function getLockedUsers() {
   const now = new Date().toISOString().replace('T', ' ').split('.')[0];
 
-  return query(`
+  return await query(`
     SELECT o.user_id, o.lock_level, o.locked_until, u.username, u.role,
            COALESCE(s.first_name, t.first_name, '') as first_name,
            COALESCE(s.last_name, t.last_name, '') as last_name,
@@ -1433,27 +1448,27 @@ function getLockedUsers() {
   `, [now]);
 }
 
-function adminUnlockAccount(userId) {
-  run('DELETE FROM otp_lockouts WHERE user_id = ?', [userId]);
-  run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
+async function adminUnlockAccount(userId) {
+  await run('DELETE FROM otp_lockouts WHERE user_id = ?', [userId]);
+  await run("UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?", [userId]);
 }
 
-function getSchoolSettings() {
+async function getSchoolSettings() {
   const keys = ['school_name', 'school_short_name', 'primary_color', 'logo_path'];
   const settings = { school_name: 'SIMS', school_short_name: 'SIMS', primary_color: '#3b82f6', logo_path: null };
   for (const key of keys) {
-    const row = get('SELECT value FROM settings WHERE key = ?', [key]);
+    const row = await get('SELECT value FROM settings WHERE key = ?', [key]);
     if (row) settings[key] = row.value;
   }
   return settings;
 }
 
-function updateSchoolSetting(key, value) {
-  run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+async function updateSchoolSetting(key, value) {
+  await run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
 }
 
-function getSchoolSetting(key) {
-  const row = get('SELECT value FROM settings WHERE key = ?', [key]);
+async function getSchoolSetting(key) {
+  const row = await get('SELECT value FROM settings WHERE key = ?', [key]);
   return row ? row.value : null;
 }
 

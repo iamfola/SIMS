@@ -1,8 +1,8 @@
 const { getUserById, getStudentByUserId, getTeacherByUserId } = require('../models/db');
 
-const isAuthenticated = (req, res, next) => {
+const isAuthenticated = async (req, res, next) => {
   if (req.session && req.session.userId) {
-    const user = getUserById(req.session.userId);
+    const user = await getUserById(req.session.userId);
     if (!user) {
       req.session.destroy(() => {
         res.redirect('/login');
@@ -21,9 +21,9 @@ const isAdmin = (req, res, next) => {
   res.status(403).render('error', { message: 'Access denied. Admin only.' });
 };
 
-const isTeacher = (req, res, next) => {
+const isTeacher = async (req, res, next) => {
   if (req.session && req.session.role === 'teacher') {
-    const teacher = getTeacherByUserId(req.session.userId);
+    const teacher = await getTeacherByUserId(req.session.userId);
     if (!teacher) {
       req.session.destroy(() => {
         return res.status(404).render('error', { message: 'Teacher record not found. Please contact admin or login again.' });
@@ -35,9 +35,9 @@ const isTeacher = (req, res, next) => {
   res.status(403).render('error', { message: 'Access denied. Teacher only.' });
 };
 
-const isStudent = (req, res, next) => {
+const isStudent = async (req, res, next) => {
   if (req.session && req.session.role === 'student') {
-    const student = getStudentByUserId(req.session.userId);
+    const student = await getStudentByUserId(req.session.userId);
     if (!student) {
       req.session.destroy(() => {
         return res.status(404).render('error', { message: 'Student record not found. Please contact admin or login again.' });
