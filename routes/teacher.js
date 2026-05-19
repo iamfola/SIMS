@@ -126,7 +126,7 @@ router.post('/results', isTeacher, async (req, res) => {
       const ca = Math.round(parseFloat(caInput));
       const exam = Math.round(parseFloat(examInput));
       const total = ca + exam;
-      const grade = calculateGrade(total);
+      const grade = await calculateGrade(total);
 
       await upsertResult(student_id, ss.subject_id, ca, exam, total, grade, 'pending', currentTerm.name, currentSession.name, currentSession.id, currentTerm.id);
       uploadedCount++;

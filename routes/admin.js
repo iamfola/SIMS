@@ -325,7 +325,7 @@ router.post('/students', isAdmin, async (req, res) => {
       return res.redirect('/admin/students?error=Selected class does not exist');
     }
 
-    const reg_no = generateRegNo();
+    const reg_no = await generateRegNo();
 
     const userId = await createStudentWithUser(username, password, first_name, middle_name, last_name, age, class_id, reg_no, email || null);
 

@@ -60,7 +60,7 @@ async function main() {
       const fn = FIRST_NAMES[i % FIRST_NAMES.length];
       const ln = LAST_NAMES[i % LAST_NAMES.length];
       try {
-        const regNo = generateRegNo();
+        const regNo = await generateRegNo();
         await createStudentWithUser(sUser, PASSWORD, fn, '', ln, getAge(cls.name), cls.id, regNo);
         created++;
       } catch (e) {
