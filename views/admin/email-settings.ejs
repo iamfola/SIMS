@@ -42,13 +42,18 @@
               </div>
             </div>
             <div class="mb-3">
-              <label for="smtp_user" class="form-label">SMTP Username (Sender Email)</label>
-              <input type="email" class="form-control" id="smtp_user" name="smtp_user" value="<%= smtp_user %>" placeholder="sims@yourschool.com">
+              <label for="smtp_user" class="form-label">SMTP Username</label>
+              <input type="text" class="form-control" id="smtp_user" name="smtp_user" value="<%= smtp_user %>" placeholder="sims@yourschool.com">
             </div>
             <div class="mb-4">
               <label for="smtp_pass" class="form-label">SMTP Password</label>
               <input type="password" class="form-control" id="smtp_pass" name="smtp_pass" value="<%= smtp_pass %>" placeholder="App password or SMTP password">
               <small class="text-muted">For Gmail, use an App Password. Enable 2FA and generate one at myaccount.google.com/apppasswords</small>
+            </div>
+            <div class="mb-4">
+              <label for="from_email" class="form-label">Sender Email (From address)</label>
+              <input type="email" class="form-control" id="from_email" name="from_email" value="<%= from_email %>" placeholder="noreply@yourschool.com">
+              <small class="text-muted">If empty, SMTP Username is used as the sender.</small>
             </div>
           </div>
 
@@ -61,7 +66,7 @@
             </div>
             <div class="mb-3">
               <label for="sg_from_email" class="form-label">Sender Email (From address)</label>
-              <input type="email" class="form-control" id="smtp_user" name="smtp_user" value="<%= smtp_user %>" placeholder="noreply@yourschool.com">
+              <input type="email" class="form-control" id="sg_from_email" name="from_email" value="<%= from_email %>" placeholder="noreply@yourschool.com">
               <small class="text-muted">Must be a verified sender in your SendGrid account.</small>
             </div>
             <div class="mb-4">

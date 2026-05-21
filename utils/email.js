@@ -11,6 +11,8 @@ async function getEmailConfig() {
   const fromName = await get("SELECT value FROM email_settings WHERE key = 'from_name'");
   const sgKey = await get("SELECT value FROM email_settings WHERE key = 'sendgrid_api_key'");
 
+  const fromEmail = await get("SELECT value FROM email_settings WHERE key = 'from_email'");
+
   return {
     provider: provider ? provider.value : 'smtp',
     host: host ? host.value : null,
@@ -18,6 +20,7 @@ async function getEmailConfig() {
     user: user ? user.value : null,
     pass: pass ? pass.value : null,
     fromName: fromName ? fromName.value : 'SIMS School',
+    fromEmail: fromEmail ? fromEmail.value : user ? user.value : null,
     sendgridApiKey: sgKey ? sgKey.value : null,
   };
 }
@@ -56,7 +59,7 @@ async function sendViaSMTP(to, subject, html, config, attachments = null) {
 
   try {
     await transporter.sendMail({
-      from: `"${config.fromName}" <${config.user}>`,
+      from: `"${config.fromName}" <${config.fromEmail || config.user}>`,
       to,
       subject,
       html,
@@ -75,7 +78,7 @@ async function sendViaSendGrid(to, subject, html, config, attachments = null) {
 
   const msg = {
     to,
-    from: { email: config.user || 'noreply@sims.edu', name: config.fromName },
+    from: { email: config.fromEmail || 'noreply@sims.edu', name: config.fromName },
     subject,
     html,
   };

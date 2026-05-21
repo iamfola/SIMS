@@ -438,9 +438,10 @@ router.get('/email-settings', isAdmin, async (req, res) => {
   const smtp_user = await getEmailSetting('smtp_user') || '';
   const smtp_pass = await getEmailSetting('smtp_pass') || '';
   const from_name = await getEmailSetting('from_name') || 'SIMS School';
+  const from_email = await getEmailSetting('from_email') || '';
   const sendgrid_api_key = await getEmailSetting('sendgrid_api_key') || '';
   res.render('admin/email-settings', {
-    email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, from_name, sendgrid_api_key,
+    email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, from_name, from_email, sendgrid_api_key,
     success: req.query.success,
     error: req.query.error,
     title: 'Email Settings'
@@ -449,13 +450,14 @@ router.get('/email-settings', isAdmin, async (req, res) => {
 
 router.post('/email-settings', isAdmin, async (req, res) => {
   try {
-    const { email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, from_name, sendgrid_api_key } = req.body;
+    const { email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, from_name, from_email, sendgrid_api_key } = req.body;
     await setEmailSetting('email_provider', email_provider === 'sendgrid' ? 'sendgrid' : 'smtp');
     await setEmailSetting('smtp_host', smtp_host || '');
     await setEmailSetting('smtp_port', smtp_port || '587');
     await setEmailSetting('smtp_user', smtp_user || '');
     await setEmailSetting('smtp_pass', smtp_pass || '');
     await setEmailSetting('from_name', from_name || 'SIMS School');
+    await setEmailSetting('from_email', from_email || '');
     await setEmailSetting('sendgrid_api_key', sendgrid_api_key || '');
     res.redirect('/admin/email-settings?success=Email settings saved');
   } catch (error) {
