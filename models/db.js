@@ -1074,50 +1074,6 @@ async function sendResultEditEmail(resultId) {
   return await sendEmail(result.email, subject, html);
 }
 
-async function sendAttendanceNotification(studentId, status, date, termName, sessionName) {
-  if (!isEmailConfigured()) {
-    console.log('[Email] Not configured, skipping notification');
-    return false;
-  }
-
-  const studentRows = await query(`
-    SELECT s.email, s.first_name, s.last_name, c.name as class_name, c.arm as class_arm
-    FROM students s
-    JOIN classes c ON s.class_id = c.id
-    WHERE s.id = ?
-  `, [studentId]);
-  const student = studentRows[0];
-
-  if (!student || !student.email) {
-    console.log(`[Email] Student ${studentId} has no email, skipping`);
-    return false;
-  }
-
-  const school = await getSchoolSettings();
-  const schoolName = school.school_name || 'SIMS';
-  const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-NG', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
-
-  const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-
-  const subject = `Attendance ${statusLabel} - ${formattedDate}`;
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #2c3e50;">Attendance Notification</h2>
-      <p>Dear <strong>${student.first_name} ${student.last_name}</strong>,</p>
-      <p>Your attendance has been marked for <strong>${formattedDate}</strong>:</p>
-      <p style="font-size: 1.2rem;"><strong>Status: ${statusLabel}</strong></p>
-      <p>Class: <strong>${student.class_name} ${student.class_arm}</strong></p>
-      <p>Term: <strong>${termName}</strong> | Session: <strong>${sessionName}</strong></p>
-      <hr>
-      <p style="color: #6c757d; font-size: 0.85rem;">This is an automated message from ${schoolName}. Do not reply to this email.</p>
-    </div>
-  `;
-
-  return await sendEmail(student.email, subject, html);
-}
-
 async function sendNewsletter(subject, htmlBody, filter = {}) {
   if (!isEmailConfigured()) {
     console.log('[Email] Not configured, skipping newsletter');
@@ -1488,7 +1444,7 @@ module.exports = {
   promoteStudents,
   updateStudentEmail, getStudentsWithoutEmail,
   getEmailSetting, setEmailSetting,
-  sendResultApprovalEmail, sendResultEditEmail, sendAttendanceNotification, sendNewsletter, sendResultPdfEmail, verifyCode,
+  sendResultApprovalEmail, sendResultEditEmail, sendNewsletter, sendResultPdfEmail, verifyCode,
   getUserWithEmail, getUserWithEmailByRegNo, createPasswordReset, getValidOTP, markOTPUsed,
   checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, getLockedUsers, adminUnlockAccount,
   recordFailedLogin, checkLoginLocked, resetFailedLogin,

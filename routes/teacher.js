@@ -6,7 +6,6 @@ const {
   upsertAttendance, getStudentByUserId, getStudentById,
   getStudentSubjects, get, query,
   getCurrentSession, getCurrentTerm, getTodayAttendanceForClass, getAttendanceDatesForClass, getAttendanceForDate,
-  sendAttendanceNotification,
 } = require('../models/db');
 const { isTeacher } = require('../middleware/auth');
 
@@ -212,7 +211,6 @@ router.post('/attendance', isTeacher, async (req, res) => {
 
     for (const a of parsedAttendance) {
       await upsertAttendance(a.student_id, date, a.status, teacher.id, currentSession.id, currentTerm.id);
-      await sendAttendanceNotification(a.student_id, a.status, date, currentTerm.name, currentSession.name);
     }
     res.redirect('/teacher/attendance?success=Attendance marked successfully');
   } catch (error) {
