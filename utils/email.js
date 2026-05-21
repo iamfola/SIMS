@@ -30,7 +30,7 @@ async function isEmailConfigured() {
   return !!(config.host && config.user && config.pass);
 }
 
-async function sendEmail(to, subject, html) {
+async function sendEmail(to, subject, html, attachments = null) {
   const config = await getEmailConfig();
 
   if (!await isEmailConfigured()) {
@@ -39,13 +39,13 @@ async function sendEmail(to, subject, html) {
   }
 
   if (config.provider === 'sendgrid') {
-    return sendViaSendGrid(to, subject, html, config);
+    return sendViaSendGrid(to, subject, html, config, attachments);
   }
 
-  return sendViaSMTP(to, subject, html, config);
+  return sendViaSMTP(to, subject, html, config, attachments);
 }
 
-async function sendViaSMTP(to, subject, html, config) {
+async function sendViaSMTP(to, subject, html, config, attachments = null) {
   const transporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
@@ -60,6 +60,7 @@ async function sendViaSMTP(to, subject, html, config) {
       to,
       subject,
       html,
+      attachments: attachments || undefined,
     });
     console.log(`[Email][SMTP] Sent to ${to}: ${subject}`);
     return true;
@@ -69,16 +70,21 @@ async function sendViaSMTP(to, subject, html, config) {
   }
 }
 
-async function sendViaSendGrid(to, subject, html, config) {
+async function sendViaSendGrid(to, subject, html, config, attachments = null) {
   sgMail.setApiKey(config.sendgridApiKey);
 
+  const msg = {
+    to,
+    from: { email: config.user || 'noreply@sims.edu', name: config.fromName },
+    subject,
+    html,
+  };
+  if (attachments) {
+    msg.attachments = attachments;
+  }
+
   try {
-    await sgMail.send({
-      to,
-      from: { email: config.user || 'noreply@sims.edu', name: config.fromName },
-      subject,
-      html,
-    });
+    await sgMail.send(msg);
     console.log(`[Email][SendGrid] Sent to ${to}: ${subject}`);
     return true;
   } catch (error) {

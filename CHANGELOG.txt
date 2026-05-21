@@ -1,7 +1,13 @@
 CHANGELOG
 ==========
 
-v1.0.0 - 2026-05-21
+v5.0.1 - 2026-05-21
+--------------------
+Fixed:
+  - SendGrid email sending: sendResultPdfEmail now respects the email provider
+    setting (was always using SMTP, ignoring SendGrid configuration)
+
+v5.0.0 - 2026-05-21
 --------------------
 Added:
   - Version tracking: app version now displayed in the sidebar

@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
 const { query, run, get, isPostgres } = require('../config/database');
 
 const CLASS_PROMOTION_ORDER = {
@@ -1226,36 +1225,17 @@ async function sendResultPdfEmail(studentId, sessionId, termId) {
 
   const fileName = `${student.reg_no}_${term.name.replace(/\s+/g, '_')}_${session.name.replace('/', '_')}.pdf`.replace(/[^a-zA-Z0-9_.-]/g, '_');
 
-  const smtpHost = await getEmailSetting('smtp_host');
-  const smtpPort = await getEmailSetting('smtp_port');
-  const smtpUser = await getEmailSetting('smtp_user');
-  const smtpPass = await getEmailSetting('smtp_pass');
-  const fromName = await getEmailSetting('from_name');
+  const sent = await sendEmail(
+    student.email,
+    `Your Result - ${term.name}, ${session.name}`,
+    `<p>Dear ${student.first_name},</p><p>Please find your result attached.</p><p>Regards,<br>${schoolName}</p>`,
+    [{ filename: fileName, content: pdfBuffer }]
+  );
 
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: parseInt(smtpPort || '587'),
-    secure: parseInt(smtpPort || '587') === 465,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  });
-
-  try {
-    await transporter.sendMail({
-      from: `"${fromName || schoolName}" <${smtpUser}>`,
-      to: student.email,
-      subject: `Your Result - ${term.name}, ${session.name}`,
-      html: `<p>Dear ${student.first_name},</p><p>Please find your result attached.</p><p>Regards,<br>${schoolName}</p>`,
-      attachments: [{ filename: fileName, content: pdfBuffer }],
-    });
-    console.log(`[Email] Result PDF sent to ${student.email}`);
+  if (sent) {
     return { success: true, message: 'Result sent to your email' };
-  } catch (error) {
-    console.error(`[Email] Failed to send result PDF:`, error.message);
-    return { success: false, message: 'Failed to send email' };
   }
+  return { success: false, message: 'Failed to send email' };
 }
 
 async function verifyCode(code) {
