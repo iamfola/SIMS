@@ -4,3 +4,4 @@ school.db
 app_error.txt
 app_output.txt
 public/uploads/*
+*.bat

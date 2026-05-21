@@ -131,7 +131,8 @@ async function initSchema() {
         must_change_password INTEGER DEFAULT 1,
         email TEXT,
         login_attempts INTEGER DEFAULT 0,
-        locked_until TEXT
+        locked_until TEXT,
+        session_token TEXT
       )
     `);
     await pool.query(`
