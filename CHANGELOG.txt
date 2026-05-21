@@ -1,6 +1,14 @@
 CHANGELOG
 ==========
 
+v5.1.3 - 2026-05-21
+--------------------
+Added:
+  - Single session enforcement: logging in on a new device invalidates the
+    previous session. Affected user sees "You have been logged out" message.
+  - Mobile responsiveness: improved table scrolling, compact stat cards,
+    and layout polish for very small screens
+
 v5.1.0 - 2026-05-21
 --------------------
 Added:

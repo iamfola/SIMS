@@ -1537,6 +1537,43 @@ body.sidebar-expanded .sidebar .list-group-item .nav-text {
     }
 }
 
+@media (max-width: 575.98px) {
+    .stat-card {
+        padding: 14px 10px !important;
+    }
+    .stat-card .stat-number {
+        font-size: 1.3rem !important;
+    }
+    .stat-card .stat-label {
+        font-size: 0.6rem !important;
+    }
+    .stat-card .stat-icon {
+        font-size: 1.5rem !important;
+    }
+    .table-responsive {
+        font-size: 0.75rem;
+    }
+    .table-responsive .btn {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        min-height: unset;
+    }
+    .row.g-3 > [class*="col-"] {
+        padding-right: 6px;
+        padding-left: 6px;
+    }
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .card-body {
+        padding: 14px;
+    }
+    .navbar .d-none.d-md-inline {
+        display: none !important;
+    }
+}
+
 @media (max-width: 767.98px) {
     :root {
         --sidebar-collapsed: 0px;
@@ -1640,6 +1677,15 @@ body.sidebar-expanded .sidebar .list-group-item .nav-text {
 
     .table-responsive {
         font-size: 0.85rem;
+    }
+    .table-responsive::after {
+        content: '\2190  Scroll  \2192';
+        display: block;
+        text-align: center;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        padding: 4px 0 0;
+        opacity: 0.6;
     }
 
     .btn {

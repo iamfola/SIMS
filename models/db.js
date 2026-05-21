@@ -1447,6 +1447,15 @@ async function getSchoolSettings() {
   return settings;
 }
 
+async function setSessionToken(userId, token) {
+  return await run('UPDATE users SET session_token = ? WHERE id = ?', [token, userId]);
+}
+
+async function getSessionToken(userId) {
+  const row = await get('SELECT session_token FROM users WHERE id = ?', [userId]);
+  return row ? row.session_token : null;
+}
+
 async function updateSchoolSetting(key, value) {
   if (isPostgres) {
     await run('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value', [key, value]);
@@ -1483,5 +1492,5 @@ module.exports = {
   getUserWithEmail, getUserWithEmailByRegNo, createPasswordReset, getValidOTP, markOTPUsed,
   checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, getLockedUsers, adminUnlockAccount,
   recordFailedLogin, checkLoginLocked, resetFailedLogin,
-  getSchoolSettings, updateSchoolSetting, getSchoolSetting,
+  getSchoolSettings, updateSchoolSetting, getSchoolSetting, setSessionToken, getSessionToken,
 };

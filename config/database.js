@@ -432,6 +432,7 @@ async function initSchema() {
   try { db.run(`ALTER TABLE users ADD COLUMN email TEXT`); } catch (e) {}
   try { db.run(`ALTER TABLE users ADD COLUMN login_attempts INTEGER DEFAULT 0`); } catch (e) {}
   try { db.run(`ALTER TABLE users ADD COLUMN locked_until TEXT`); } catch (e) {}
+  try { db.run(`ALTER TABLE users ADD COLUMN session_token TEXT`); } catch (e) {}
   try { db.run(`ALTER TABLE verifications ADD COLUMN results_hash TEXT`); } catch (e) {}
   try { db.run(`ALTER TABLE results ADD COLUMN session_id INTEGER REFERENCES sessions(id)`); } catch (e) {}
   try { db.run(`ALTER TABLE results ADD COLUMN term_id INTEGER REFERENCES terms(id)`); } catch (e) {}

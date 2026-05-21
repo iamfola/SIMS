@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
-const { get, getUserByUsername, getUserByRegNo, getUserById, validatePassword, updateUserPassword, getStudentByUserId, getTeacherByUserId, getUserWithEmail, getUserWithEmailByRegNo, createPasswordReset, getValidOTP, markOTPUsed, checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, generatePasscode, getSchoolSettings, recordFailedLogin, checkLoginLocked, resetFailedLogin } = require('../models/db');
+const { get, getUserByUsername, getUserByRegNo, getUserById, validatePassword, updateUserPassword, getStudentByUserId, getTeacherByUserId, getUserWithEmail, getUserWithEmailByRegNo, createPasswordReset, getValidOTP, markOTPUsed, checkOTPLockout, recordFailedOTPAttempt, resetOTPLockout, generatePasscode, getSchoolSettings, recordFailedLogin, checkLoginLocked, resetFailedLogin, setSessionToken } = require('../models/db');
 const { isAuthenticated } = require('../middleware/auth');
 const { isEmailConfigured, sendEmail } = require('../utils/email');
 
@@ -65,9 +65,12 @@ router.post('/login', async (req, res) => {
       }
     }
 
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    await setSessionToken(user.id, sessionToken);
     req.session.userId = user.id;
     req.session.username = user.username;
     req.session.role = user.role;
+    req.session.sessionToken = sessionToken;
 
     if (user.must_change_password) {
       return res.redirect('/change-password');
@@ -195,9 +198,12 @@ router.post('/admin/verify-login', async (req, res) => {
     return res.redirect('/login?error=User not found.');
   }
 
+  const sessionToken = crypto.randomBytes(32).toString('hex');
+  await setSessionToken(user.id, sessionToken);
   req.session.userId = user.id;
   req.session.username = user.username;
   req.session.role = user.role;
+  req.session.sessionToken = sessionToken;
   delete req.session.pendingAdmin;
 
   if (user.must_change_password) {
