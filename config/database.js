@@ -279,6 +279,7 @@ async function initSchema() {
         updated_at TEXT DEFAULT NOW()
       )
     `);
+    try { await pool.query('ALTER TABLE users ADD COLUMN session_token TEXT'); } catch (e) {}
     return;
   }
 
