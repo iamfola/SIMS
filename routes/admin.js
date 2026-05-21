@@ -450,7 +450,10 @@ router.get('/email-settings', isAdmin, async (req, res) => {
 
 router.post('/email-settings', isAdmin, async (req, res) => {
   try {
-    const { email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, from_name, from_email, sendgrid_api_key } = req.body;
+    const { email_provider, smtp_host, smtp_port, smtp_user, smtp_pass, sendgrid_api_key } = req.body;
+    let { from_name, from_email } = req.body;
+    if (Array.isArray(from_name)) from_name = from_name[0];
+    if (Array.isArray(from_email)) from_email = from_email[0];
     await setEmailSetting('email_provider', email_provider === 'sendgrid' ? 'sendgrid' : 'smtp');
     await setEmailSetting('smtp_host', smtp_host || '');
     await setEmailSetting('smtp_port', smtp_port || '587');

@@ -95,10 +95,15 @@
 </div>
 
 <script>
+function toggleProvider(provider) {
+  const isSmtp = provider === 'smtp';
+  document.getElementById('smtpFields').classList.toggle('d-none', !isSmtp);
+  document.getElementById('sendgridFields').classList.toggle('d-none', isSmtp);
+  document.querySelectorAll('#smtpFields input, #smtpFields textarea').forEach(el => el.disabled = !isSmtp);
+  document.querySelectorAll('#sendgridFields input, #sendgridFields textarea').forEach(el => el.disabled = isSmtp);
+}
 document.querySelectorAll('input[name="email_provider"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    document.getElementById('smtpFields').classList.toggle('d-none', radio.value === 'sendgrid');
-    document.getElementById('sendgridFields').classList.toggle('d-none', radio.value === 'smtp');
-  });
+  radio.addEventListener('change', () => toggleProvider(radio.value));
 });
+toggleProvider(document.querySelector('input[name="email_provider"]:checked').value);
 </script>
