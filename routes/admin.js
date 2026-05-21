@@ -32,7 +32,11 @@ router.get('/dashboard', isAdmin, async (req, res) => {
   const teacherCount = (await db.get('SELECT COUNT(*) as count FROM teachers')).count;
   const classCount = (await db.get('SELECT COUNT(*) as count FROM classes')).count;
   const pendingResults = (await getPendingResults()).length;
-  const lockedCount = (await db.get('SELECT COUNT(*) as count FROM otp_lockouts WHERE lock_level > 0')).count;
+  const lockedCount = (await db.get(`SELECT COUNT(*) as count FROM (
+    SELECT user_id FROM otp_lockouts WHERE lock_level > 0
+    UNION
+    SELECT id FROM users WHERE locked_until > datetime('now')
+  )`)).count;
 
   res.render('admin/dashboard', {
     studentCount, teacherCount, classCount, pendingResults, lockedCount,
@@ -463,10 +467,21 @@ router.post('/email-settings', isAdmin, async (req, res) => {
 router.get('/school-settings', isAdmin, async (req, res) => {
   const school = await getSchoolSettings();
   const adminUser = await get('SELECT id, username, email FROM users WHERE id = ?', [req.session.userId]);
+  const lockedUsers = await getLockedUsers();
+  const now = new Date().toISOString().replace('T', ' ').split('.')[0];
+  lockedUsers.forEach(u => {
+    if (u.locked_until && u.locked_until > now) {
+      u.is_locked = true;
+    } else if (u.lock_level === 3) {
+      u.is_locked = true;
+    } else {
+      u.is_locked = false;
+    }
+  });
   res.render('admin/school-settings', {
     school, title: 'School Settings',
     success: req.query.success, error: req.query.error,
-    adminUser,
+    adminUser, lockedUsers,
   });
 });
 

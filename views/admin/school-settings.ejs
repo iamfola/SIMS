@@ -112,6 +112,62 @@
   </div>
 </div>
 
+<div class="card mt-4" id="locked-accounts">
+  <div class="card-header"><i class="bi bi-lock"></i> Locked Accounts</div>
+  <div class="card-body">
+    <% if (!lockedUsers || lockedUsers.length === 0) { %>
+      <div class="alert alert-info mb-0"><i class="bi bi-check-circle me-1"></i> No locked accounts found.</div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Source</th>
+              <th>Lock Level</th>
+              <th>Locked Until</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% lockedUsers.forEach(function(u) { %>
+              <tr>
+                <td><strong><%= u.username %></strong></td>
+                <td><%= u.first_name %> <%= u.last_name %></td>
+                <td><span class="badge bg-<%= u.role === 'admin' ? 'danger' : u.role === 'teacher' ? 'success' : 'info' %>"><%= u.role %></span></td>
+                <td><span class="badge bg-<%= u.lock_source === 'login' ? 'secondary' : 'dark' %>"><%= u.lock_source === 'login' ? 'Login' : 'OTP' %></span></td>
+                <td>
+                  <% if (u.lock_level === 1) { %>
+                    <span class="badge bg-warning">1 Hour</span>
+                  <% } else if (u.lock_level === 2) { %>
+                    <span class="badge bg-warning">1 Day</span>
+                  <% } else if (u.lock_level === 3) { %>
+                    <span class="badge bg-danger">Permanent</span>
+                  <% } %>
+                </td>
+                <td><%= u.locked_until ? u.locked_until : '—' %></td>
+                <td>
+                  <% if (u.is_locked) { %>
+                    <span class="badge bg-danger">Locked</span>
+                  <% } else { %>
+                    <span class="badge bg-success">Expired</span>
+                  <% } %>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-primary unlock-btn" data-user-id="<%= u.user_id %>">Unlock</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
 <div class="card mt-4">
   <div class="card-header"><i class="bi bi-shield-exclamation"></i> Advanced Settings</div>
   <div class="card-body">
@@ -123,5 +179,22 @@
 <script>
   document.getElementById('primary_color').addEventListener('input', function() {
     document.getElementById('primary_color_hex').value = this.value;
+  });
+  document.querySelectorAll('.unlock-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const confirmed = await showConfirm('Unlock this account?');
+      if (!confirmed) return;
+      const res = await fetch('/admin/lockouts/' + this.dataset.userId + '/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showAlert('Account unlocked successfully.');
+        location.reload();
+      } else {
+        showAlert('Failed to unlock account.');
+      }
+    });
   });
 </script>

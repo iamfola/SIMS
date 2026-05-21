@@ -198,6 +198,22 @@ body.sidebar-expanded .sidebar-heading {
     opacity: 1;
 }
 
+.sidebar-version {
+    padding: 4px 20px 12px;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.25);
+    white-space: nowrap;
+    overflow: hidden;
+    height: 0;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+body.sidebar-expanded .sidebar-version {
+    height: auto;
+    opacity: 1;
+}
+
 .list-group {
     border: none;
 }

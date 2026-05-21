@@ -1,0 +1,16 @@
+CHANGELOG
+==========
+
+v1.0.0 - 2026-05-21
+--------------------
+Added:
+  - Version tracking: app version now displayed in the sidebar
+  - CHANGELOG.txt: changelog file created to track changes
+
+Fixed:
+  - Admin dashboard: locked accounts counter now includes both OTP-locked and
+    login-locked accounts (was only counting OTP lockouts, showing 0 when only
+    login lockouts existed)
+  - Admin sidebar: Locked Accounts moved into School Settings page as a section
+    to prevent sidebar overflow on smaller screens; sidebar link now points
+    to /admin/school-settings#locked-accounts

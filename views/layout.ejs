@@ -30,6 +30,7 @@
         </h4>
       </div>
       <div class="sidebar-heading"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %> Panel</div>
+      <div class="sidebar-version">v<%= appVersion %></div>
       <div class="list-group list-group-flush">
         <% if (user.role === 'admin') { %>
           <a href="/admin/dashboard" class="list-group-item list-group-item-action sidebar-item" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="nav-text">Dashboard</span></a>
@@ -44,7 +45,7 @@
           <a href="/admin/newsletter" class="list-group-item list-group-item-action sidebar-item" title="Newsletter"><i class="bi bi-megaphone"></i> <span class="nav-text">Newsletter</span></a>
           <a href="/admin/school-settings" class="list-group-item list-group-item-action sidebar-item" title="School Settings"><i class="bi bi-gear"></i> <span class="nav-text">School Settings</span></a>
           <a href="/admin/verify" class="list-group-item list-group-item-action sidebar-item" title="Verify Result"><i class="bi bi-shield-check"></i> <span class="nav-text">Verify Result</span></a>
-          <a href="/admin/lockouts" class="list-group-item list-group-item-action sidebar-item" title="Locked Accounts"><i class="bi bi-lock"></i> <span class="nav-text">Locked Accounts</span></a>
+          <a href="/admin/school-settings#locked-accounts" class="list-group-item list-group-item-action sidebar-item" title="Locked Accounts"><i class="bi bi-lock"></i> <span class="nav-text">Locked Accounts</span></a>
         <% } else if (user.role === 'teacher') { %>
           <a href="/teacher/dashboard" class="list-group-item list-group-item-action sidebar-item" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="nav-text">Dashboard</span></a>
           <a href="/teacher/students" class="list-group-item list-group-item-action sidebar-item" title="My Students"><i class="bi bi-people"></i> <span class="nav-text">My Students</span></a>

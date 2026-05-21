@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
+const fs = require('fs');
 const { initDB } = require('./config/database');
 const { seedDefaultData, getCurrentSession, getCurrentTerm, getSchoolSettings } = require('./models/db');
 const multer = require('multer');
@@ -10,6 +11,7 @@ const upload = multer({ dest: path.join(__dirname, 'public', 'uploads') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const APP_VERSION = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -36,6 +38,7 @@ app.use(async (req, res, next) => {
     username: req.session.username,
     role: req.session.role,
   } : null;
+  res.locals.appVersion = APP_VERSION;
   try {
     res.locals.currentSession = await getCurrentSession();
     res.locals.currentTerm = await getCurrentTerm();
