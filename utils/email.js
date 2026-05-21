@@ -80,7 +80,12 @@ async function sendViaSendGrid(to, subject, html, config, attachments = null) {
     html,
   };
   if (attachments) {
-    msg.attachments = attachments;
+    msg.attachments = attachments.map(a => ({
+      filename: a.filename,
+      type: a.type || 'application/pdf',
+      disposition: a.disposition || 'attachment',
+      content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : a.content,
+    }));
   }
 
   try {
