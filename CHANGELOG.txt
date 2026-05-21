@@ -1,6 +1,13 @@
 CHANGELOG
 ==========
 
+v5.1.0 - 2026-05-21
+--------------------
+Added:
+  - Student PDF download: students can now download their result report card
+    directly from the results page (GET /student/results/download)
+  - Download PDF button on student results page alongside email option
+
 v5.0.1 - 2026-05-21
 --------------------
 Fixed:

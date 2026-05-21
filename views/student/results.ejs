@@ -37,6 +37,9 @@
         <div class="col-md-4 d-flex align-items-end gap-2">
           <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-filter-left"></i> Filter</button>
           <% if (results.length > 0) { %>
+            <button type="button" class="btn btn-outline-success" onclick="downloadResult()" id="downloadBtn" title="Download result PDF">
+              <i class="bi bi-download"></i>
+            </button>
             <button type="button" class="btn btn-outline-primary" onclick="requestResult()" id="requestBtn" title="Request result PDF via email">
               <i class="bi bi-envelope"></i>
             </button>
@@ -150,10 +153,15 @@
     <% } %>
 
     <div class="text-center mb-4">
-      <button class="btn btn-primary btn-lg w-100 w-md-auto" onclick="requestResult()" id="requestBtn2">
-        <i class="bi bi-envelope-paper"></i> Request Full Results via Email
-      </button>
-      <p class="text-muted mt-2 mb-0" style="font-size: 0.8rem;">A PDF report card with all subjects, grades, and class rank will be sent to your email.</p>
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a class="btn btn-success btn-lg" href="/student/results/download?session_id=<%= selectedSessionId %>&term_id=<%= selectedTermId %>">
+          <i class="bi bi-download"></i> Download PDF Report
+        </a>
+        <button class="btn btn-primary btn-lg" onclick="requestResult()" id="requestBtn2">
+          <i class="bi bi-envelope-paper"></i> Send to Email
+        </button>
+      </div>
+      <p class="text-muted mt-2 mb-0" style="font-size: 0.8rem;">Download your official PDF report card or have it sent to your email.</p>
     </div>
 
   <% } else { %>
@@ -181,6 +189,21 @@
 </div>
 
 <script>
+function downloadResult() {
+  var sessionEl = document.getElementById('session_id');
+  var termEl = document.getElementById('term_id');
+  var session_id = sessionEl.value;
+  var term_id = termEl.value;
+  if (!session_id) { showAlert('Please select a session first.'); return; }
+  if (!term_id) {
+    for (var i = 0; i < termEl.options.length; i++) {
+      if (termEl.options[i].value) { term_id = termEl.options[i].value; break; }
+    }
+  }
+  if (!term_id) { showAlert('No term available.'); return; }
+  window.location.href = '/student/results/download?session_id=' + session_id + '&term_id=' + term_id;
+}
+
 async function requestResult() {
   var sessionEl = document.getElementById('session_id');
   var termEl = document.getElementById('term_id');
