@@ -3,17 +3,33 @@ CHANGELOG
 
 v5.2.0 - 2026-05-22
 -------------------
+Added:
+  - Sidebar themes: light, glass, and colored variants configurable in school
+    settings (sidebar_theme setting)
+  - Secondary and accent CSS custom properties with dynamic light variants
+  - Login page background themes (gradient, minimal) via login_bg_theme setting
+  - Font family, border-radius, and footer text configurable in school settings
+  - Custom CSS injection via school_settings.custom_css field
+  - Dark mode colors now derived from school's secondary/accent colors
+
 Fixed:
+  - Dark mode white flash: added inline script in <head> that reads localStorage
+    and sets data-bs-theme before page render, preventing white flash on
+    navigation in dark mode
   - CSS: removed overlapping media queries at 575px that relied on !important
     (consolidated into existing breakpoints)
   - CSS: removed auto-animation from all .card elements to prevent layout shift
     on pages with many cards
+  - CSS: removed stagger-children animation that caused staggered card entries
+    on dashboards (felt sluggish)
   - CSS: improved .table-striped hover specificity by using direct child
     selectors (> tbody > tr) over tie-breaking source order
   - CSS: added prefers-reduced-motion query to disable animations for users
     with motion sensitivity
   - CSS: added :focus-visible outlines on .theme-toggle and .quick-action-item
     for better keyboard accessibility
+  - CSS: replaced hardcoded color values with CSS custom properties (--primary,
+    --secondary, --accent) throughout stylesheet for consistent theming
 
 v5.1.3 - 2026-05-21
 --------------------
