@@ -1,6 +1,20 @@
 CHANGELOG
 ==========
 
+v5.2.0 - 2026-05-22
+-------------------
+Fixed:
+  - CSS: removed overlapping media queries at 575px that relied on !important
+    (consolidated into existing breakpoints)
+  - CSS: removed auto-animation from all .card elements to prevent layout shift
+    on pages with many cards
+  - CSS: improved .table-striped hover specificity by using direct child
+    selectors (> tbody > tr) over tie-breaking source order
+  - CSS: added prefers-reduced-motion query to disable animations for users
+    with motion sensitivity
+  - CSS: added :focus-visible outlines on .theme-toggle and .quick-action-item
+    for better keyboard accessibility
+
 v5.1.3 - 2026-05-21
 --------------------
 Added:

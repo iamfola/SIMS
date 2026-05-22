@@ -1394,8 +1394,18 @@ async function adminUnlockAccount(userId) {
 }
 
 async function getSchoolSettings() {
-  const keys = ['school_name', 'school_short_name', 'primary_color', 'logo_path'];
-  const settings = { school_name: 'SIMS', school_short_name: 'SIMS', primary_color: '#3b82f6', logo_path: null };
+  const keys = ['school_name', 'school_short_name', 'primary_color', 'logo_path',
+    'secondary_color', 'sidebar_theme', 'font_family', 'border_radius',
+    'login_bg_style', 'login_message', 'school_motto', 'school_address',
+    'footer_text', 'custom_css', 'accent_color', 'theme_preset'];
+  const defaults = {
+    school_name: 'SIMS', school_short_name: 'SIMS', primary_color: '#3b82f6',
+    logo_path: null, secondary_color: '#8b5cf6', sidebar_theme: 'dark',
+    font_family: 'Inter', border_radius: '12', login_bg_style: 'default',
+    login_message: '', school_motto: '', school_address: '',
+    footer_text: '', custom_css: '', accent_color: '#06b6d4', theme_preset: 'default'
+  };
+  const settings = { ...defaults };
   for (const key of keys) {
     const row = await get('SELECT value FROM settings WHERE key = ?', [key]);
     if (row) settings[key] = row.value;

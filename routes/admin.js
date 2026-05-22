@@ -492,10 +492,17 @@ router.get('/school-settings', isAdmin, async (req, res) => {
 
 router.post('/school-settings', isAdmin, async (req, res) => {
   try {
-    const { school_name, school_short_name, primary_color } = req.body;
-    await updateSchoolSetting('school_name', school_name);
-    await updateSchoolSetting('school_short_name', school_short_name);
-    await updateSchoolSetting('primary_color', primary_color);
+    const fields = [
+      'school_name', 'school_short_name', 'primary_color', 'secondary_color',
+      'accent_color', 'sidebar_theme', 'font_family', 'border_radius',
+      'login_bg_style', 'login_message', 'school_motto', 'school_address',
+      'footer_text', 'custom_css', 'theme_preset'
+    ];
+    for (const field of fields) {
+      if (req.body[field] !== undefined) {
+        await updateSchoolSetting(field, req.body[field]);
+      }
+    }
     res.redirect('/admin/school-settings?success=School settings updated');
   } catch (error) {
     console.error('Save school settings error:', error);

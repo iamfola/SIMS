@@ -1,7 +1,7 @@
 <div class="welcome-header">
   <div>
-    <h2>School Settings</h2>
-    <p class="page-subtitle">Customize your school name, logo, and theme colors</p>
+    <h2>School Settings & Customization</h2>
+    <p class="page-subtitle">Brand your school portal with custom colors, fonts, and layout options</p>
   </div>
 </div>
 
@@ -12,106 +12,351 @@
   <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-1"></i> <%= error %></div>
 <% } %>
 
-<div class="row g-4">
-  <div class="col-lg-7">
-    <div class="card">
-      <div class="card-header"><i class="bi bi-gear"></i> General Settings</div>
-      <div class="card-body">
-        <form method="POST" action="/admin/school-settings">
-          <div class="mb-3">
-            <label for="school_name" class="form-label">School Name</label>
-            <input type="text" class="form-control" id="school_name" name="school_name"
-              value="<%= school.school_name %>" required>
-          </div>
-          <div class="mb-3">
-            <label for="school_short_name" class="form-label">Short Name / Acronym</label>
-            <input type="text" class="form-control" id="school_short_name" name="school_short_name"
-              value="<%= school.school_short_name %>" placeholder="e.g. SMS" required>
-          </div>
-          <div class="mb-3">
-            <label for="primary_color" class="form-label">Primary Color</label>
-            <div class="d-flex align-items-center gap-3">
-              <input type="color" class="form-control form-control-color" id="primary_color" name="primary_color"
-                value="<%= school.primary_color %>" style="width: 60px; height: 40px; padding: 2px;">
-              <input type="text" class="form-control" id="primary_color_hex" style="max-width: 120px;"
-                value="<%= school.primary_color %>" oninput="document.getElementById('primary_color').value=this.value">
+<!-- ===== THEME PRESETS ===== -->
+<div class="card mb-4">
+  <div class="card-header"><i class="bi bi-palette"></i> Theme Presets</div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">Choose a pre-built color scheme or customize your own below.</p>
+    <div class="row g-3" id="themePresets">
+      <% const presets = [
+        { id: 'default', name: 'Default Blue', primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4', sidebar: 'dark' },
+        { id: 'emerald', name: 'Emerald Green', primary: '#10b981', secondary: '#059669', accent: '#34d399', sidebar: 'dark' },
+        { id: 'royal', name: 'Royal Purple', primary: '#8b5cf6', secondary: '#7c3aed', accent: '#a78bfa', sidebar: 'dark' },
+        { id: 'crimson', name: 'Crimson Red', primary: '#ef4444', secondary: '#dc2626', accent: '#f87171', sidebar: 'dark' },
+        { id: 'ocean', name: 'Ocean Teal', primary: '#14b8a6', secondary: '#0d9488', accent: '#2dd4bf', sidebar: 'dark' },
+        { id: 'sunset', name: 'Sunset Orange', primary: '#f97316', secondary: '#ea580c', accent: '#fb923c', sidebar: 'dark' },
+        { id: 'midnight', name: 'Midnight', primary: '#1e293b', secondary: '#334155', accent: '#475569', sidebar: 'dark' },
+        { id: 'light', name: 'Light Theme', primary: '#2563eb', secondary: '#7c3aed', accent: '#0891b2', sidebar: 'light' },
+      ]; %>
+      <% presets.forEach(function(p) { %>
+        <div class="col-6 col-md-3">
+          <button type="button" class="theme-preset-btn btn btn-outline-secondary p-3 w-100 <%= school.theme_preset === p.id ? 'active' : '' %>"
+            data-preset="<%= p.id %>"
+            style="border-color: <%= p.primary %>30; <%= school.theme_preset === p.id ? 'border-color: ' + p.primary + '; background: ' + p.primary + '10;' : '' %>"
+            onclick="applyPreset('<%= p.id %>', '<%= p.primary %>', '<%= p.secondary %>', '<%= p.accent %>', '<%= p.sidebar %>')">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+              <span style="width:20px;height:20px;border-radius:50%;background:<%= p.primary %>;display:inline-block"></span>
+              <span style="width:20px;height:20px;border-radius:50%;background:<%= p.secondary %>;display:inline-block"></span>
+              <span style="width:20px;height:20px;border-radius:50%;background:<%= p.accent %>;display:inline-block"></span>
             </div>
-            <small class="text-muted">This color is used for buttons, links, and accents across the UI.</small>
-          </div>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Settings</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-5">
-    <div class="card">
-      <div class="card-header"><i class="bi bi-image"></i> School Logo</div>
-      <div class="card-body text-center">
-        <% if (school.logo_path) { %>
-          <div class="mb-3">
-            <img src="<%= school.logo_path %>" alt="School Logo"
-              style="max-height: 120px; max-width: 100%; border-radius: 8px; border: 2px solid var(--border-color);">
-          </div>
-          <form method="POST" action="/admin/school-settings/remove-logo" class="mb-3">
-            <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Remove Logo</button>
-          </form>
-        <% } else { %>
-          <div class="empty-state py-4">
-            <i class="bi bi-image"></i>
-            <h5>No Logo</h5>
-            <p>Upload a school logo to display in the sidebar and login page.</p>
-          </div>
-        <% } %>
-        <form method="POST" action="/admin/school-settings/logo" enctype="multipart/form-data">
-          <div class="mb-3">
-            <input type="file" class="form-control" name="logo" accept="image/*" required>
-            <small class="text-muted">Max 2MB. PNG, JPG, or SVG.</small>
-          </div>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Upload Logo</button>
-        </form>
-      </div>
-    </div>
-
-    <div class="card mt-3">
-      <div class="card-header"><i class="bi bi-eye"></i> Preview</div>
-      <div class="card-body">
-        <div class="p-3 rounded" style="background: var(--bg); border: 1px solid var(--border-color);">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <% if (school.logo_path) { %>
-              <img src="<%= school.logo_path %>" alt="" style="height: 28px; width: auto;">
-            <% } else { %>
-              <i class="bi bi-building" style="color: <%= school.primary_color %>; font-size: 1.3rem;"></i>
-            <% } %>
-            <strong style="color: <%= school.primary_color %>;"><%= school.school_short_name %></strong>
-          </div>
-          <div style="height: 4px; background: <%= school.primary_color %>; border-radius: 2px;"></div>
-          <p class="text-muted small mt-2 mb-0">This is how your school branding will appear.</p>
+            <span class="small"><%= p.name %></span>
+          </button>
         </div>
-      </div>
+      <% }); %>
     </div>
   </div>
 </div>
 
+<form method="POST" action="/admin/school-settings" id="schoolSettingsForm">
+  <!-- Hidden field for theme_preset -->
+  <input type="hidden" name="theme_preset" id="theme_preset" value="<%= school.theme_preset || 'default' %>">
+
+  <div class="row g-4">
+    <!-- ===== BRAND ===== -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header"><i class="bi bi-building"></i> Brand & Identity</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="school_name" class="form-label">School Name</label>
+              <input type="text" class="form-control" id="school_name" name="school_name"
+                value="<%= school.school_name %>" required oninput="updatePreview()">
+            </div>
+            <div class="col-md-6">
+              <label for="school_short_name" class="form-label">Short Name / Acronym</label>
+              <input type="text" class="form-control" id="school_short_name" name="school_short_name"
+                value="<%= school.school_short_name %>" placeholder="e.g. SMS" required oninput="updatePreview()">
+            </div>
+            <div class="col-md-6">
+              <label for="school_motto" class="form-label">School Motto</label>
+              <input type="text" class="form-control" id="school_motto" name="school_motto"
+                value="<%= school.school_motto %>" placeholder="e.g. Excellence in Education">
+            </div>
+            <div class="col-md-6">
+              <label for="school_address" class="form-label">School Address</label>
+              <input type="text" class="form-control" id="school_address" name="school_address"
+                value="<%= school.school_address %>" placeholder="123 Education St, City">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== COLORS ===== -->
+      <div class="card mt-4">
+        <div class="card-header"><i class="bi bi-droplet"></i> Color Scheme</div>
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-4">
+              <label for="primary_color" class="form-label">Primary Color</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="color" class="form-control form-control-color" id="primary_color" name="primary_color"
+                  value="<%= school.primary_color %>" style="width:50px;height:38px;padding:2px" oninput="syncHex(this, 'primary_color_hex'); updatePreview()">
+                <input type="text" class="form-control" id="primary_color_hex" style="max-width:100px;font-size:0.8rem"
+                  value="<%= school.primary_color %>" oninput="syncColor(this, 'primary_color')">
+              </div>
+              <small class="text-muted">Buttons, links, active states</small>
+            </div>
+            <div class="col-md-4">
+              <label for="secondary_color" class="form-label">Secondary Color</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="color" class="form-control form-control-color" id="secondary_color" name="secondary_color"
+                  value="<%= school.secondary_color %>" style="width:50px;height:38px;padding:2px" oninput="syncHex(this, 'secondary_color_hex'); updatePreview()">
+                <input type="text" class="form-control" id="secondary_color_hex" style="max-width:100px;font-size:0.8rem"
+                  value="<%= school.secondary_color %>" oninput="syncColor(this, 'secondary_color')">
+              </div>
+              <small class="text-muted">Accent gradients, highlights</small>
+            </div>
+            <div class="col-md-4">
+              <label for="accent_color" class="form-label">Accent Color</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="color" class="form-control form-control-color" id="accent_color" name="accent_color"
+                  value="<%= school.accent_color %>" style="width:50px;height:38px;padding:2px" oninput="syncHex(this, 'accent_color_hex'); updatePreview()">
+                <input type="text" class="form-control" id="accent_color_hex" style="max-width:100px;font-size:0.8rem"
+                  value="<%= school.accent_color %>" oninput="syncColor(this, 'accent_color')">
+              </div>
+              <small class="text-muted">Info badges, secondary elements</small>
+            </div>
+          </div>
+          <div class="mt-3 p-3 rounded" style="background:var(--bg);border:1px solid var(--border-color)">
+            <div class="small fw-bold mb-2">Live Color Preview</div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <span class="btn btn-primary btn-sm">Primary</span>
+              <span class="btn btn-secondary btn-sm" id="secondaryBtnPreview" style="background:var(--secondary);border-color:var(--secondary)">Secondary</span>
+              <span class="btn btn-info btn-sm" id="accentBtnPreview" style="background:var(--accent);border-color:var(--accent)">Accent</span>
+              <span class="badge bg-primary">Primary Badge</span>
+              <span class="badge bg-secondary" style="background:var(--secondary)!important">Secondary Badge</span>
+              <span class="badge bg-info" style="background:var(--accent)!important">Accent Badge</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TYPOGRAPHY ===== -->
+      <div class="card mt-4">
+        <div class="card-header"><i class="bi bi-fonts"></i> Typography</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="font_family" class="form-label">Font Family</label>
+              <select class="form-select" id="font_family" name="font_family" onchange="updatePreview()">
+                <% const fonts = [
+                  { value: 'Inter', label: 'Inter (Modern)' },
+                  { value: 'Segoe UI', label: 'Segoe UI (Windows)' },
+                  { value: 'Roboto', label: 'Roboto (Material)' },
+                  { value: 'Open Sans', label: 'Open Sans (Clean)' },
+                  { value: 'Poppins', label: 'Poppins (Rounded)' },
+                  { value: 'Nunito', label: 'Nunito (Friendly)' },
+                  { value: 'Lato', label: 'Lato (Classic)' },
+                  { value: 'Merriweather', label: 'Merriweather (Serif)' },
+                  { value: 'System UI', label: 'System Default' },
+                ]; %>
+                <% fonts.forEach(function(f) { %>
+                  <option value="<%= f.value %>" <%= school.font_family === f.value ? 'selected' : '' %>><%= f.label %></option>
+                <% }); %>
+              </select>
+              <small class="text-muted">Requires Google Fonts import (added automatically)</small>
+            </div>
+            <div class="col-md-6">
+              <label for="border_radius" class="form-label">Border Radius: <span id="radiusValue"><%= school.border_radius || '12' %></span>px</label>
+              <input type="range" class="form-range" id="border_radius" name="border_radius"
+                min="0" max="24" step="2" value="<%= school.border_radius || '12' %>"
+                oninput="document.getElementById('radiusValue').textContent=this.value;updatePreview()">
+              <div class="d-flex justify-content-between small text-muted">
+                <span>Square (0px)</span>
+                <span>Round (24px)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== LAYOUT ===== -->
+      <div class="card mt-4">
+        <div class="card-header"><i class="bi bi-layout-sidebar"></i> Layout & Sidebar</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Sidebar Theme</label>
+              <div class="d-flex gap-2">
+                <% const sidebars = [
+                  { value: 'dark', label: 'Dark', icon: 'bi-moon-stars' },
+                  { value: 'light', label: 'Light', icon: 'bi-brightness-high' },
+                  { value: 'glass', label: 'Glass', icon: 'bi-window-stack' },
+                  { value: 'colored', label: 'Colored', icon: 'bi-palette' },
+                ]; %>
+                <% sidebars.forEach(function(s) { %>
+                  <label class="d-flex flex-column align-items-center gap-1 p-2 rounded cursor-pointer"
+                    style="cursor:pointer;border:2px solid <%= school.sidebar_theme === s.value ? 'var(--primary)' : 'var(--border-color)' %>;min-width:70px"
+                    onclick="document.querySelectorAll('.sidebar-option').forEach(el=>el.style.borderColor='var(--border-color)');this.style.borderColor='var(--primary)';document.getElementById('sidebar_theme').value='<%= s.value %>';updatePreview()">
+                    <i class="bi <%= s.icon %>" style="font-size:1.3rem;color:var(--text-secondary)"></i>
+                    <span class="small"><%= s.label %></span>
+                  </label>
+                <% }); %>
+              </div>
+              <input type="hidden" name="sidebar_theme" id="sidebar_theme" value="<%= school.sidebar_theme || 'dark' %>">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== LOGIN PAGE ===== -->
+      <div class="card mt-4">
+        <div class="card-header"><i class="bi bi-box-arrow-in-right"></i> Login Page</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="login_bg_style" class="form-label">Background Style</label>
+              <select class="form-select" id="login_bg_style" name="login_bg_style" onchange="updatePreview()">
+                <option value="default" <%= school.login_bg_style === 'default' ? 'selected' : '' %>>Default (Subtle Circles)</option>
+                <option value="gradient" <%= school.login_bg_style === 'gradient' ? 'selected' : '' %>>Gradient (Primary → Secondary)</option>
+                <option value="minimal" <%= school.login_bg_style === 'minimal' ? 'selected' : '' %>>Minimal (Clean)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="login_message" class="form-label">Login Page Message</label>
+              <input type="text" class="form-control" id="login_message" name="login_message"
+                value="<%= school.login_message %>" placeholder="e.g. Welcome to the new school year!">
+              <small class="text-muted">Shown below the login form</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CONTACT & FOOTER ===== -->
+      <div class="card mt-4">
+        <div class="card-header"><i class="bi bi-info-circle"></i> Contact & Footer</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="footer_text" class="form-label">Footer Text</label>
+              <input type="text" class="form-control" id="footer_text" name="footer_text"
+                value="<%= school.footer_text %>" placeholder="e.g. &copy; 2026 School Name. All rights reserved.">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CUSTOM CSS ===== -->
+      <div class="card mt-4">
+        <div class="card-header"><i class="bi bi-code-slash"></i> Custom CSS <span class="badge bg-warning ms-1">Advanced</span></div>
+        <div class="card-body">
+          <p class="text-muted small">Inject custom CSS to override any styles. Use this to fine-tune your school's look and feel.</p>
+          <textarea class="form-control font-monospace" id="custom_css" name="custom_css" rows="6" style="font-size:0.8rem"
+            placeholder="/* Your custom CSS here */
+.sidebar-brand h4 {
+  font-size: 1.5rem;
+}
+.login-card {
+  border-radius: 20px;
+}"><%= school.custom_css %></textarea>
+          <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="applyCustomCSS()"><i class="bi bi-play"></i> Preview Custom CSS</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg mt-3"><i class="bi bi-save"></i> Save All Settings</button>
+    </div>
+
+    <!-- ===== RIGHT COLUMN: PREVIEW & MISC ===== -->
+    <div class="col-lg-4">
+      <!-- Logo -->
+      <div class="card">
+        <div class="card-header"><i class="bi bi-image"></i> School Logo</div>
+        <div class="card-body text-center">
+          <% if (school.logo_path) { %>
+            <div class="mb-3">
+              <img src="<%= school.logo_path %>" alt="School Logo"
+                style="max-height:120px;max-width:100%;border-radius:8px;border:2px solid var(--border-color)">
+            </div>
+            <form method="POST" action="/admin/school-settings/remove-logo" class="mb-3">
+              <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Remove Logo</button>
+            </form>
+          <% } else { %>
+            <div class="empty-state py-3">
+              <i class="bi bi-image"></i>
+              <h5>No Logo</h5>
+              <p class="small">Upload a school logo to display in the sidebar and login page.</p>
+            </div>
+          <% } %>
+          <form method="POST" action="/admin/school-settings/logo" enctype="multipart/form-data">
+            <div class="mb-3">
+              <input type="file" class="form-control form-control-sm" name="logo" accept="image/*" required>
+              <small class="text-muted">Max 2MB. PNG, JPG, SVG.</small>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Upload Logo</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Live Preview Card -->
+      <div class="card mt-3">
+        <div class="card-header"><i class="bi bi-eye"></i> Live Preview</div>
+        <div class="card-body">
+          <div class="p-3 rounded" id="livePreview" style="background:var(--bg-card);border:1px solid var(--border-color)">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <% if (school.logo_path) { %>
+                <img src="<%= school.logo_path %>" alt="" style="height:24px;width:auto;">
+              <% } else { %>
+                <i class="bi bi-building" style="color:var(--primary);font-size:1.2rem"></i>
+              <% } %>
+              <strong id="previewBrand" style="color:var(--primary)"><%= school.school_short_name %></strong>
+            </div>
+            <div style="height:4px;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:2px"></div>
+            <p class="small text-muted mt-2 mb-0" id="previewMotto"><%= school.school_motto || 'School motto appears here' %></p>
+            <div class="d-flex gap-1 mt-2">
+              <span class="badge" style="background:var(--primary)">Students</span>
+              <span class="badge" style="background:var(--secondary)">Teachers</span>
+              <span class="badge" style="background:var(--accent)">Results</span>
+            </div>
+            <div class="mt-2 pt-2 border-top" style="border-color:var(--border-color)">
+              <div class="small">The <strong style="color:var(--primary)">quick brown fox</strong> jumps over the <strong style="color:var(--secondary)">lazy dog</strong>.</div>
+            </div>
+          </div>
+          <div class="mt-2">
+            <small class="text-muted">Settings auto-preview as you change them.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- ===== ACCOUNT SETTINGS ===== -->
 <div class="card mt-4">
   <div class="card-header"><i class="bi bi-person-gear"></i> Account Settings</div>
   <div class="card-body">
     <form method="POST" action="/admin/account/update" onsubmit="return confirm('Update your account details?')">
       <div class="row g-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label for="admin-username" class="form-label">Username</label>
           <input type="text" class="form-control" id="admin-username" name="username" value="<%= adminUser.username %>">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label for="admin-email" class="form-label">Email (for password recovery)</label>
           <input type="email" class="form-control" id="admin-email" name="email" value="<%= adminUser.email || '' %>" placeholder="admin@school.com">
         </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Account</button>
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-save"></i> Save Account</button>
     </form>
   </div>
 </div>
 
+<!-- ===== EMAIL SETTINGS LINK ===== -->
+<div class="row mt-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-envelope"></i> Email Configuration</div>
+      <div class="card-body">
+        <p class="text-muted mb-2">Configure email server settings for result notifications and password resets.</p>
+        <a href="/admin/email-settings" class="btn btn-outline-secondary btn-sm"><i class="bi bi-envelope"></i> Email Settings</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOCKED ACCOUNTS ===== -->
 <div class="card mt-4" id="locked-accounts">
   <div class="card-header"><i class="bi bi-lock"></i> Locked Accounts</div>
   <div class="card-body">
@@ -137,23 +382,23 @@
               <tr>
                 <td><strong><%= u.username %></strong></td>
                 <td><%= u.first_name %> <%= u.last_name %></td>
-                <td><span class="badge bg-<%= u.role === 'admin' ? 'danger' : u.role === 'teacher' ? 'success' : 'info' %>"><%= u.role %></span></td>
-                <td><span class="badge bg-<%= u.lock_source === 'login' ? 'secondary' : 'dark' %>"><%= u.lock_source === 'login' ? 'Login' : 'OTP' %></span></td>
+                <td><span class="badge" style="background:<%= u.role === 'admin' ? 'var(--danger)' : u.role === 'teacher' ? 'var(--success)' : 'var(--primary)' %>"><%= u.role %></span></td>
+                <td><span class="badge" style="background:<%= u.lock_source === 'login' ? 'var(--text-muted)' : 'var(--text-primary)' %>"><%= u.lock_source === 'login' ? 'Login' : 'OTP' %></span></td>
                 <td>
                   <% if (u.lock_level === 1) { %>
-                    <span class="badge bg-warning">1 Hour</span>
+                    <span class="badge" style="background:var(--warning)">1 Hour</span>
                   <% } else if (u.lock_level === 2) { %>
-                    <span class="badge bg-warning">1 Day</span>
+                    <span class="badge" style="background:var(--warning)">1 Day</span>
                   <% } else if (u.lock_level === 3) { %>
-                    <span class="badge bg-danger">Permanent</span>
+                    <span class="badge" style="background:var(--danger)">Permanent</span>
                   <% } %>
                 </td>
                 <td><%= u.locked_until ? u.locked_until : '—' %></td>
                 <td>
                   <% if (u.is_locked) { %>
-                    <span class="badge bg-danger">Locked</span>
+                    <span class="badge" style="background:var(--danger)">Locked</span>
                   <% } else { %>
-                    <span class="badge bg-success">Expired</span>
+                    <span class="badge" style="background:var(--success)">Expired</span>
                   <% } %>
                 </td>
                 <td>
@@ -168,18 +413,93 @@
   </div>
 </div>
 
-<div class="card mt-4">
-  <div class="card-header"><i class="bi bi-shield-exclamation"></i> Advanced Settings</div>
-  <div class="card-body">
-    <p class="text-muted mb-2">Configure email server settings for result notifications and password resets.</p>
-    <a href="/admin/email-settings" class="btn btn-outline-secondary btn-sm"><i class="bi bi-envelope"></i> Email Configuration</a>
-  </div>
-</div>
-
 <script>
-  document.getElementById('primary_color').addEventListener('input', function() {
-    document.getElementById('primary_color_hex').value = this.value;
+  // Color sync helpers
+  function syncHex(colorInput, textId) {
+    document.getElementById(textId).value = colorInput.value;
+    updatePreview();
+  }
+  function syncColor(textInput, colorId) {
+    const val = textInput.value.trim();
+    if (/^#[0-9a-f]{6}$/i.test(val)) {
+      document.getElementById(colorId).value = val;
+      updatePreview();
+    }
+  }
+
+  // Theme presets
+  function applyPreset(id, primary, secondary, accent, sidebar) {
+    document.getElementById('theme_preset').value = id;
+    document.getElementById('primary_color').value = primary;
+    document.getElementById('primary_color_hex').value = primary;
+    document.getElementById('secondary_color').value = secondary;
+    document.getElementById('secondary_color_hex').value = secondary;
+    document.getElementById('accent_color').value = accent;
+    document.getElementById('accent_color_hex').value = accent;
+    document.getElementById('sidebar_theme').value = sidebar;
+    document.querySelectorAll('.theme-preset-btn').forEach(function(b) { b.classList.remove('active'); });
+    event.currentTarget.classList.add('active');
+    updatePreview();
+  }
+
+  // Custom CSS preview
+  function applyCustomCSS() {
+    var existing = document.getElementById('custom-css-preview');
+    if (existing) existing.remove();
+    var style = document.createElement('style');
+    style.id = 'custom-css-preview';
+    style.textContent = document.getElementById('custom_css').value;
+    document.head.appendChild(style);
+  }
+
+  // Live preview update
+  function updatePreview() {
+    var primary = document.getElementById('primary_color').value;
+    var secondary = document.getElementById('secondary_color').value;
+    var accent = document.getElementById('accent_color').value;
+    var font = document.getElementById('font_family').value;
+    var radius = document.getElementById('border_radius').value;
+
+    document.documentElement.style.setProperty('--primary', primary);
+    document.documentElement.style.setProperty('--primary-dark', primary);
+    document.documentElement.style.setProperty('--secondary', secondary);
+    document.documentElement.style.setProperty('--secondary-dark', secondary);
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--accent-dark', accent);
+    document.documentElement.style.setProperty('--border-radius', radius + 'px');
+    document.documentElement.style.setProperty('--border-radius-sm', Math.max(4, Math.floor(radius * 0.6)) + 'px');
+    document.body.style.fontFamily = font + ", 'Segoe UI', -apple-system, sans-serif";
+
+    // Preview brand
+    var shortName = document.getElementById('school_short_name').value || 'SIMS';
+    document.getElementById('previewBrand').textContent = shortName;
+
+    var motto = document.getElementById('school_motto').value;
+    document.getElementById('previewMotto').textContent = motto || 'School motto appears here';
+
+    // Sidebar theme class
+    var sidebarTheme = document.getElementById('sidebar_theme').value;
+    document.body.classList.remove('sidebar-theme-light', 'sidebar-theme-glass', 'sidebar-theme-colored');
+    if (sidebarTheme !== 'dark') {
+      document.body.classList.add('sidebar-theme-' + sidebarTheme);
+    }
+  }
+
+  // Init preview on load
+  document.addEventListener('DOMContentLoaded', function() {
+    updatePreview();
+
+    // If custom CSS exists, apply it
+    var css = document.getElementById('custom_css').value;
+    if (css && css.trim()) {
+      var style = document.createElement('style');
+      style.id = 'custom-css-preview';
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
   });
+
+  // Copy existing unlock button logic
   document.querySelectorAll('.unlock-btn').forEach(function(btn) {
     btn.addEventListener('click', async function() {
       const confirmed = await showConfirm('Unlock this account?');
